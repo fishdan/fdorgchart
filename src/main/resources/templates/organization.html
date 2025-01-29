@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Create Organization</title>
+  <script>
+    async function createOrganization(event) {
+      event.preventDefault(); // Prevent default form submission
+
+      const formData = {
+        name: document.getElementById("name").value,
+        domain: document.getElementById("domain").value,
+        password: document.getElementById("password").value,
+        email: document.getElementById("email").value
+      };
+
+      const response = await fetch('/api/organizations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        alert("Organization created successfully!");
+      } else {
+        alert("Failed to create organization.");
+      }
+    }
+  </script>
+</head>
+<body>
+<h1>Create Organization</h1>
+<form onsubmit="createOrganization(event)">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name" required><br>
+
+  <label for="domain">Domain:</label>
+  <input type="text" id="domain" name="domain" required><br>
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" name="password" required><br>
+
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" required><br>
+
+  <button type="submit">Create Organization</button>
+</form>
+</body>
+</html>

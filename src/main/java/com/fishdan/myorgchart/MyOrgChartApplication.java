@@ -8,7 +8,7 @@ public class MyOrgChartApplication {
 
     public static void main(String[] args) {
 
-        System.out.println("Starting");
+        System.out.println("Database Password: " + System.getProperty("spring.datasource.password"));
         SpringApplication.run(MyOrgChartApplication.class, args);
     }
 

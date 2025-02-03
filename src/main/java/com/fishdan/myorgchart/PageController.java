@@ -7,23 +7,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class PageController {
 
+    @GetMapping("/")
+    public String homePage() {
+        return "index"; // Loads index.html
+    }
+
     @GetMapping("/create-organization")
     public String createOrganizationPage(Model model) {
         model.addAttribute("message", "Create a New Organization");
         return "organization"; // Points to organization.html in templates
     }
 
-    @GetMapping("/hello")
-    public String helloPage() {
-        return "hello";
-    }
 
 
     @GetMapping("/create-person")
-    public String createPersonPage(Model model) {
-        model.addAttribute("message", "Create a New Person");
-        return "person"; // Points to person.html in templates
+    public String createPersonPage() {
+        return "person";
     }
+
 
     @GetMapping("/view-org-chart")
     public String viewOrgChartPage(Model model) {

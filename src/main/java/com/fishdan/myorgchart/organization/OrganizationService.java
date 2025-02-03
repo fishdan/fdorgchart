@@ -18,6 +18,9 @@ public class OrganizationService {
     }
 
     public Organization createOrganization(Organization organization) {
+        if (organizationRepository.existsByDomain(organization.getDomain())) {
+            throw new IllegalArgumentException("Domain already exists. Please choose another one.");
+        }
         return organizationRepository.save(organization);
     }
 

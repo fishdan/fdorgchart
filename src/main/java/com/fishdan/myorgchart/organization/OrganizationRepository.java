@@ -6,4 +6,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
     Organization findByEmail(String email);
+    boolean existsByDomain(String domain);
+
+    Organization findByDomain(String domain);
 }
+
+

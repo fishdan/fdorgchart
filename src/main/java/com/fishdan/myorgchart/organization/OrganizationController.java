@@ -1,6 +1,8 @@
 package com.fishdan.myorgchart.organization;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
+import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
@@ -20,8 +22,14 @@ public class OrganizationController {
     }
 
     @PostMapping
-    public Organization createOrganization(@RequestBody Organization organization) {
-        return organizationService.createOrganization(organization);
+    public String createOrganization(@RequestBody Organization organization, Model model) {
+        try {
+            organizationService.createOrganization(organization);
+            return "redirect:/create-organization?success=true"; // Redirect after successful creation
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "organization"; // Return back to the form with an error message
+        }
     }
 
     @GetMapping("/{id}")

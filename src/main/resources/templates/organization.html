@@ -2,49 +2,90 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>Create Organization</title>
-  <script>
-    async function createOrganization(event) {
-      event.preventDefault(); // Prevent default form submission
-
-      const formData = {
-        name: document.getElementById("name").value,
-        domain: document.getElementById("domain").value,
-        password: document.getElementById("password").value,
-        email: document.getElementById("email").value
-      };
-
-      const response = await fetch('/api/organizations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        alert("Organization created successfully!");
-      } else {
-        alert("Failed to create organization.");
-      }
-    }
-  </script>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<h1>Create Organization</h1>
-<form onsubmit="createOrganization(event)">
-  <label for="name">Name:</label>
-  <input type="text" id="name" name="name" required><br>
+<body class="bg-light">
+<div class="container mt-5">
+  <!-- Page Title -->
+  <h1 class="text-center mb-4">Create Organization</h1>
 
-  <label for="domain">Domain:</label>
-  <input type="text" id="domain" name="domain" required><br>
+  <!-- Error Message Alert -->
+  <div th:if="${error}" class="alert alert-danger" role="alert">
+    <p th:text="${error}"></p>
+  </div>
 
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password" required><br>
+  <!-- Success Message Alert -->
+  <div th:if="${success}" class="alert alert-success" role="alert">
+    Organization created successfully!
+  </div>
 
-  <label for="email">Email:</label>
-  <input type="email" id="email" name="email" required><br>
+  <!-- Organization Form -->
+  <div class="card shadow-lg p-4">
+    <form onsubmit="createOrganization(event)">
+      <div class="mb-3">
+        <label for="name" class="form-label">Organization Name</label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Enter organization name" required>
+      </div>
 
-  <button type="submit">Create Organization</button>
-</form>
+      <div class="mb-3">
+        <label for="domain" class="form-label">Domain</label>
+        <input type="text" id="domain" name="domain" class="form-control" placeholder="Enter domain (e.g., example.com)" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="Enter contact email" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Enter a secure password" required>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">Create Organization</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-center mt-4">
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- JavaScript Form Submission -->
+<script>
+  async function createOrganization(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = {
+      name: document.getElementById("name").value,
+      domain: document.getElementById("domain").value,
+      password: document.getElementById("password").value,
+      email: document.getElementById("email").value
+    };
+
+    const response = await fetch('/api/organizations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (response.ok) {
+      window.location.href = "/create-organization?success=true"; // Reload with success message
+    } else {
+      const errorText = await response.text();
+      alert("Failed to create organization: " + errorText);
+    }
+  }
+</script>
 </body>
 </html>

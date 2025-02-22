@@ -2,7 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>Create Person</title>
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -21,7 +20,7 @@
 
   <!-- Form Card -->
   <div class="card shadow-lg p-4">
-    <form onsubmit="createPerson(event)">
+    <form action="/api/people" method="post">
       <div class="mb-3">
         <label for="fullName" class="form-label">Full Name</label>
         <input type="text" id="fullName" name="fullName" class="form-control" required>
@@ -62,33 +61,5 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- JavaScript Form Submission -->
-<script>
-  async function createPerson(event) {
-    event.preventDefault();
-
-    const formData = {
-      fullName: document.getElementById("fullName").value,
-      email: document.getElementById("email").value,
-      domain: document.getElementById("domain").value,
-      department: document.getElementById("department").value,
-      supervisorEmail: document.getElementById("supervisorEmail").value || null
-    };
-
-    const response = await fetch('/api/people', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
-
-    if (response.ok) {
-      window.location.href = "/create-person?success=true";
-    } else {
-      const errorText = await response.text();
-      alert("Failed to create person: " + errorText);
-    }
-  }
-</script>
 </body>
 </html>

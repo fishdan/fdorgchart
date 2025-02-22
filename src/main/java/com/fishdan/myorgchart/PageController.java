@@ -26,9 +26,9 @@ public class PageController {
     }
 
 
-    @GetMapping("/view-org-chart")
+    @GetMapping("/view-orgchart")
     public String viewOrgChartPage(Model model) {
         model.addAttribute("message", "View the Organization Chart");
-        return "org-chart"; // Points to org-chart.html in templates
+        return "orgchart"; // Points to orgchart.html in templates
     }
 }

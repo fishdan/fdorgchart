@@ -19,6 +19,10 @@ public class PageController {
     }
 
 
+    @GetMapping("/orgchart")
+    public String orgChartPage() {
+        return "orgchart";
+    }
 
     @GetMapping("/create-person")
     public String createPersonPage() {

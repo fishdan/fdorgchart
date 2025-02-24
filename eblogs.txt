@@ -1,0 +1,112 @@
+Retrieving logs...
+============= i-0d92308b0110c17aa ==============
+----------------------------------------
+/var/log/eb-engine.log
+----------------------------------------
+2025/02/24 12:45:05.858274 [INFO] Running command: systemctl show -p PartOf cfn-hup.service
+2025/02/24 12:45:05.862796 [INFO] Running command: systemctl is-active cfn-hup.service
+2025/02/24 12:45:05.865318 [INFO] Running command: systemctl start cfn-hup.service
+2025/02/24 12:45:05.909219 [INFO] Instance has NOT been bootstrapped
+2025/02/24 12:45:05.909229 [INFO] Executing instruction: SetupPublishLogCronjob
+2025/02/24 12:45:05.909232 [INFO] Setup publish logs cron job...
+2025/02/24 12:45:05.909236 [INFO] Copying file /opt/elasticbeanstalk/config/private/logtasks/cron/publishlogs to /etc/cron.d/publishlogs
+2025/02/24 12:45:05.912317 [INFO] Instance has NOT been bootstrapped
+2025/02/24 12:45:05.912325 [INFO] Executing instruction: MarkBootstrapped
+2025/02/24 12:45:05.912328 [INFO] Starting MarkBootstrapped
+2025/02/24 12:45:05.912333 [INFO] Instance has NOT been bootstrapped
+2025/02/24 12:45:05.912366 [INFO] Marked instance as Bootstrapped
+2025/02/24 12:45:05.912370 [INFO] Executing instruction: Save CFN Stack Info
+2025/02/24 12:45:05.912394 [INFO] Executing cleanup logic
+2025/02/24 12:45:05.912402 [INFO] Platform Engine finished execution on command: env-launch
+
+2025/02/24 12:47:36.753699 [INFO] Starting...
+2025/02/24 12:47:36.753728 [INFO] Starting EBPlatform-PlatformEngine
+2025/02/24 12:47:36.753742 [INFO] reading event message file
+2025/02/24 12:47:36.753948 [INFO] Engine received EB command cfn-hup-exec
+
+2025/02/24 12:47:36.817401 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb -r AWSEBAutoScalingGroup --region us-east-1
+2025/02/24 12:47:37.092299 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb -r AWSEBBeanstalkMetadata --region us-east-1
+2025/02/24 12:47:37.363626 [INFO] checking whether command app-deploy is applicable to this instance...
+2025/02/24 12:47:37.363637 [INFO] this command is applicable to the instance, thus instance should execute command
+2025/02/24 12:47:37.363640 [INFO] Engine command: (app-deploy)
+
+2025/02/24 12:47:37.363645 [INFO] Downloading EB Application...
+2025/02/24 12:47:37.363648 [INFO] Region: us-east-1
+2025/02/24 12:47:37.363661 [INFO] envID: e-ijjprthhfi
+2025/02/24 12:47:37.363663 [INFO] envBucket: elasticbeanstalk-us-east-1-526257812531
+2025/02/24 12:47:37.363666 [INFO] accountID: 526257812531
+2025/02/24 12:47:37.363669 [INFO] Using manifest file name from command request
+2025/02/24 12:47:37.363674 [INFO] Unable to get version manifest file.
+2025/02/24 12:47:37.363676 [INFO] Downloading latest manifest available.
+2025/02/24 12:47:37.363681 [INFO] Download latest app version manifest
+2025/02/24 12:47:37.363788 [INFO] resources/environments/e-ijjprthhfi/_runtime/versions/manifest
+2025/02/24 12:47:37.405216 [INFO] latestManifest key *: resources/environments/e-ijjprthhfi/_runtime/versions/manifest_1740401050911
+
+2025/02/24 12:47:37.405602 [INFO] Downloading: bucket: elasticbeanstalk-us-east-1-526257812531, object: resources/environments/e-ijjprthhfi/_runtime/versions/manifest_1740401050911, expected bucket owner: 526257812531
+2025/02/24 12:47:37.466960 [INFO] Download successful153bytes downloaded
+2025/02/24 12:47:37.467053 [INFO] Trying to read and parse version manifest...
+2025/02/24 12:47:37.467110 [INFO] Downloading: bucket: elasticbeanstalk-us-east-1-526257812531, object: resources/environments/e-ijjprthhfi/_runtime/_versions/MyOrgChart/app-d9be-250224_074406355061, expected bucket owner: 526257812531
+2025/02/24 12:47:37.482889 [INFO] Download successful23573bytes downloaded
+2025/02/24 12:47:37.483118 [INFO] Executing instruction: ElectLeader
+2025/02/24 12:47:37.483124 [INFO] Running leader election for instance i-0d92308b0110c17aa...
+2025/02/24 12:47:37.483127 [INFO] Calling the cfn-elect-cmd-leader to elect the command leader.
+2025/02/24 12:47:37.483136 [INFO] Running command: /opt/aws/bin/cfn-elect-cmd-leader --stack arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb --command-name ElasticBeanstalkCommand-AWSEBAutoScalingGroup --invocation-id 1ddcae95-4923-4744-8516-86be7909e19a --listener-id i-0d92308b0110c17aa --region us-east-1
+2025/02/24 12:47:37.751307 [INFO] Instance is Leader.
+2025/02/24 12:47:37.751349 [INFO] Executing instruction: stopSqsd
+2025/02/24 12:47:37.751353 [INFO] This is a web server environment instance, skip stop sqsd daemon ...
+2025/02/24 12:47:37.751356 [INFO] Executing instruction: PreBuildEbExtension
+2025/02/24 12:47:37.751360 [INFO] Starting executing the config set Infra-EmbeddedPreBuild.
+2025/02/24 12:47:37.751369 [INFO] Running command: /opt/aws/bin/cfn-init -s arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb -r AWSEBAutoScalingGroup --region us-east-1 --configsets Infra-EmbeddedPreBuild
+2025/02/24 12:47:38.034925 [INFO] Finished executing the config set Infra-EmbeddedPreBuild.
+
+2025/02/24 12:47:38.034952 [INFO] Executing instruction: StageJavaApplication
+2025/02/24 12:47:38.034956 [INFO] Recreating /var/app/staging/
+2025/02/24 12:47:38.035042 [INFO] Running command: /usr/bin/file /opt/elasticbeanstalk/deployment/app_source_bundle
+2025/02/24 12:47:38.047634 [INFO] /opt/elasticbeanstalk/deployment/app_source_bundle: Zip archive data, at least v1.0 to extract
+
+2025/02/24 12:47:38.047666 [INFO] extracting /opt/elasticbeanstalk/deployment/app_source_bundle to /tmp/extracted_app_source_bundle
+2025/02/24 12:47:38.047674 [INFO] Running command: /usr/bin/unzip -q -o /opt/elasticbeanstalk/deployment/app_source_bundle -d /tmp/extracted_app_source_bundle
+2025/02/24 12:47:38.055433 [INFO] finished extracting /opt/elasticbeanstalk/deployment/app_source_bundle to /tmp/extracted_app_source_bundle successfully
+2025/02/24 12:47:38.055657 [INFO] app source bundle is zip file ...
+2025/02/24 12:47:38.055661 [INFO] extracting /opt/elasticbeanstalk/deployment/app_source_bundle to /var/app/staging/
+2025/02/24 12:47:38.055667 [INFO] Running command: /usr/bin/unzip -q -o /opt/elasticbeanstalk/deployment/app_source_bundle -d /var/app/staging/
+2025/02/24 12:47:38.060616 [INFO] finished extracting /opt/elasticbeanstalk/deployment/app_source_bundle to /var/app/staging/ successfully
+2025/02/24 12:47:38.061169 [INFO] Executing instruction: RunAppDeployPreBuildHooks
+2025/02/24 12:47:38.061185 [INFO] Running command: uname -m
+2025/02/24 12:47:38.062322 [INFO] x86_64
+
+2025/02/24 12:47:38.062368 [INFO] Executing platform hooks in .platform/hooks/prebuild/
+2025/02/24 12:47:38.062381 [INFO] The dir .platform/hooks/prebuild/ does not exist
+2025/02/24 12:47:38.062384 [INFO] Finished running scripts in /var/app/staging/.platform/hooks/prebuild
+2025/02/24 12:47:38.062391 [INFO] Executing instruction: Java Specific Build Application
+2025/02/24 12:47:38.062396 [INFO] no buildfile found, skip building java application
+2025/02/24 12:47:38.062401 [INFO] old env file for build tasks does not exist
+2025/02/24 12:47:38.062404 [INFO] Executing instruction: CheckProcfileForJavaApplication
+2025/02/24 12:47:38.062437 [ERROR] An error occurred during execution of command [app-deploy] - [CheckProcfileForJavaApplication]. Stop running the command. Error: there is no Procfile and no .jar file at root level of your source bundle 
+
+2025/02/24 12:47:38.062439 [INFO] Executing cleanup logic
+2025/02/24 12:47:38.062512 [INFO] CommandService Response: {"status":"FAILURE","api_version":"1.0","results":[{"status":"FAILURE","msg":"Engine execution has encountered an error.","returncode":1,"events":[{"msg":"Instance deployment failed. For details, see 'eb-engine.log'.","timestamp":1740401258062,"severity":"ERROR"}]}]}
+
+2025/02/24 12:47:38.062703 [INFO] Platform Engine finished execution on command: app-deploy
+
+2025/02/24 12:49:30.627349 [INFO] Starting...
+2025/02/24 12:49:30.627378 [INFO] Starting EBPlatform-PlatformEngine
+2025/02/24 12:49:30.627392 [INFO] reading event message file
+2025/02/24 12:49:30.627586 [INFO] Engine received EB command cfn-hup-exec
+
+2025/02/24 12:49:30.683951 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb -r AWSEBAutoScalingGroup --region us-east-1
+2025/02/24 12:49:30.964071 [INFO] Running command: /opt/aws/bin/cfn-get-metadata -s arn:aws:cloudformation:us-east-1:526257812531:stack/awseb-e-ijjprthhfi-stack/0bf31a00-f2ad-11ef-b73e-12c19ff9b9eb -r AWSEBBeanstalkMetadata --region us-east-1
+2025/02/24 12:49:31.228350 [INFO] checking whether command tail-log is applicable to this instance...
+2025/02/24 12:49:31.228361 [INFO] this command is applicable to the instance, thus instance should execute command
+2025/02/24 12:49:31.228364 [INFO] Engine command: (tail-log)
+
+2025/02/24 12:49:31.228414 [INFO] Executing instruction: GetTailLogs
+2025/02/24 12:49:31.228418 [INFO] Tail Logs...
+2025/02/24 12:49:31.228651 [INFO] Running command: tail -n 100 /var/log/eb-engine.log
+
+
+----------------------------------------
+/var/log/eb-hooks.log
+----------------------------------------
+
+

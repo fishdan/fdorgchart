@@ -34,7 +34,9 @@ public class OrgChartController {
                 List<Person> people = personRepository.findByDomain(domain);
                 Map<String, List<Person>> groupedBySupervisor = people.stream()
                     .collect(Collectors.groupingBy(person ->
-                        person.getSupervisorEmail() != null ? person.getSupervisorEmail() : "Top Level"));
+                        person.getSupervisorEmail() != null && !person.getSupervisorEmail().isBlank()
+                            ? person.getSupervisorEmail()
+                            : "Top Level"));
 
 
                 List<Person> topLevel = groupedBySupervisor.get("Top Level");
@@ -70,4 +72,3 @@ public class OrgChartController {
     }
 
 }
-

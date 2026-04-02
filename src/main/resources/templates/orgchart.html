@@ -42,6 +42,13 @@
 <div class="container mt-5">
   <h1 class="text-center mb-4">Organization Chart</h1>
 
+  <div class="alert alert-info" role="alert">
+    <strong>Instructions:</strong>
+    <div>Enter an organization domain that already exists in the system.</div>
+    <div>The chart will show people grouped by their supervisor relationships.</div>
+    <div>If no people have been added yet, the chart may appear empty.</div>
+  </div>
+
   <!-- Form to Enter Organization Domain -->
   <form id="orgchart-form" class="mb-4">
     <div class="input-group">
@@ -52,10 +59,15 @@
 
   <!-- Error Message -->
   <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+  <div id="info-message" class="alert alert-info" style="display: none;"></div>
 
   <!-- Tree View Container -->
   <div class="card shadow-lg p-4">
     <ul class="tree" id="orgchart-tree"></ul>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/" class="btn btn-secondary">Back to Home</a>
   </div>
 </div>
 
@@ -72,11 +84,22 @@
       })
       .then(data => {
         document.getElementById("error-message").style.display = "none";
+        document.getElementById("info-message").style.display = "none";
         const treeContainer = document.getElementById("orgchart-tree");
         treeContainer.innerHTML = "";
+
+        if (!data || data.length === 0) {
+          document.getElementById("info-message").style.display = "block";
+          document.getElementById("info-message").textContent =
+            `Organization '${domain}' exists, but no people have been added yet.`;
+          return;
+        }
+
         buildTree(treeContainer, data);
       })
       .catch(error => {
+        document.getElementById("info-message").style.display = "none";
+        document.getElementById("orgchart-tree").innerHTML = "";
         document.getElementById("error-message").style.display = "block";
         document.getElementById("error-message").textContent = error.message;
       });

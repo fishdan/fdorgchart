@@ -10,6 +10,13 @@
   <!-- Page Title -->
   <h1 class="text-center mb-4">Create Organization</h1>
 
+  <div class="alert alert-info" role="alert">
+    <strong>Instructions:</strong>
+    <div>Create the organization before adding any people.</div>
+    <div>Use the real domain you want to manage, such as `fishdan.com`.</div>
+    <div>You will use this same domain later when creating people and viewing the org chart.</div>
+  </div>
+
   <!-- Error Message Alert -->
   <div th:if="${error}" class="alert alert-danger" role="alert">
     <p th:text="${error}"></p>
@@ -31,6 +38,7 @@
       <div class="mb-3">
         <label for="domain" class="form-label">Domain</label>
         <input type="text" id="domain" name="domain" class="form-control" placeholder="Enter domain (e.g., example.com)" required>
+        <div class="form-text">Enter the organization domain exactly as you want users to reference it later.</div>
       </div>
 
       <div class="mb-3">

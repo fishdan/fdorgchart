@@ -8,6 +8,13 @@
 <div class="container mt-5">
   <h1 class="text-center mb-4">Create Person</h1>
 
+  <div class="alert alert-info" role="alert">
+    <strong>Instructions:</strong>
+    <div>The organization must already exist before a person can be added.</div>
+    <div>Enter the exact organization domain, such as `fishdan.com`.</div>
+    <div>Supervisor email is optional. Leave it blank for a top-level person.</div>
+  </div>
+
   <!-- Error Message Alert -->
   <div th:if="${error}" class="alert alert-danger" role="alert">
     <p th:text="${error}"></p>
@@ -34,6 +41,7 @@
       <div class="mb-3">
         <label for="domain" class="form-label">Organization Domain</label>
         <input type="text" id="domain" name="domain" class="form-control" required>
+        <div class="form-text">This must match an existing organization domain.</div>
       </div>
 
       <div class="mb-3">
@@ -44,6 +52,7 @@
       <div class="mb-3">
         <label for="supervisorEmail" class="form-label">Supervisor Email</label>
         <input type="email" id="supervisorEmail" name="supervisorEmail" class="form-control">
+        <div class="form-text">Leave blank if this person should appear at the top of the org chart.</div>
       </div>
 
       <!-- Submit Button -->

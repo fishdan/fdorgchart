@@ -34,6 +34,6 @@
 - [x] T0242 Record framework choice, commands, and validation results in `progress.ai`. *(Completed 2026-04-02: recorded the Playwright framework choice, setup commands, execution details, fixes, and validation results in the progress log.)*
 
 ## Phase 6 - Review Handoff
-- [ ] T0250 Commit the completed E2E testing work with the GitHub App identity.
-- [ ] T0251 Push the feature branch to `origin`.
-- [ ] T0252 Open a PR for review.
+- [x] T0250 Commit the completed E2E testing work with the GitHub App identity. *(Completed 2026-04-02: committed the Playwright E2E implementation and validation changes as `ai-codex-dan[bot]`.)*
+- [x] T0251 Push the feature branch to `origin`. *(Completed 2026-04-02: pushed `feature/002-frontend-e2e-tests` to `origin` using the local `.repo_ai` GitHub App flow.)*
+- [x] T0252 Open a PR for review. *(Completed 2026-04-02: opened PR `#3` `Add Playwright frontend end-to-end coverage`.)*

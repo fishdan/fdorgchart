@@ -18,3 +18,150 @@
 - Identified that the `Create Person` HTML form is currently broken because the browser submits form-encoded data while `PersonController` expects JSON via `@RequestBody`.
 - Identified plaintext database credentials committed in `src/main/resources/application.properties`.
 - Identified unsafe password handling in the `Organization` entity and startup password logging in `MyOrgChartApplication`.
+
+2026-04-02 Update - UX and Form Flow Improvements:
+- Updated `PersonController` to accept both browser form posts and JSON posts while preserving the existing redirect-based page flow.
+- Updated `PageController` so `create-person?success=true` and `create-organization?success=true` render success state in the template model.
+- Added page instructions to `index.html`, `organization.html`, `person.html`, and `orgchart.html` to clarify the intended workflow and expected inputs.
+- Added a `Back to Home` button on `orgchart.html`.
+- Updated the org chart page JavaScript so clicking `See Org Chart` now distinguishes between:
+- organization does not exist
+- organization exists but no people have been added yet
+- Added test coverage with:
+- `src/test/java/com/fishdan/myorgchart/person/PersonControllerTest.java`
+- `src/test/java/com/fishdan/myorgchart/person/PersonServiceTest.java`
+- `src/test/java/com/fishdan/myorgchart/orgchart/OrgChartControllerTest.java`
+- Added `spring-boot-starter-test` to `pom.xml`.
+
+2026-04-02 Update - Org Chart Data Bug Fix:
+- Investigated a mismatch where adding `dan@fishdan.com` reported "already exists" while the org chart for `fishdan.com` appeared empty.
+- Confirmed live data existed for `fishdan.com`, but `person.supervisor_email` was stored as an empty string instead of `NULL`.
+- Identified that `OrgChartController` treated only `NULL` supervisor values as top-level people, so records with blank supervisor email were excluded from the rendered tree root.
+- Updated `PersonService` to normalize blank `supervisorEmail` input to `null` before saving.
+- Updated `OrgChartController` to treat both `null` and blank supervisor email values as top-level nodes.
+- Ran a one-time MariaDB cleanup:
+- `update person set supervisor_email = null where supervisor_email is not null and trim(supervisor_email) = '';`
+- Verified `GET /api/orgchart?domain=fishdan.com` now returns people instead of `[]`.
+
+2026-04-02 Update - Validation and Release:
+- Repeatedly validated changes with `mvn test -q`.
+- Restarted the local Spring Boot server multiple times during the session to ensure the browser was using current code and templates.
+- Verified the live browser/API flow for `/api/people` no longer returns HTTP 415 for normal HTML form submissions.
+- Verified the org chart API returns:
+- a 404 error payload when the organization does not exist
+- an empty array for an existing org with no people
+- populated nodes for `fishdan.com` after the supervisor-email fix
+- Re-established GitHub App authentication with `.repo_ai/scripts/github-app-setup-git-auth.sh`.
+- Committed and pushed the session changes to `main` as the GitHub App bot.
+- Commit pushed: `ea2317d` - `Improve org chart UX and form handling`
+
+2026-04-02 Update - Startup Blocker Identified:
+- Re-ran the `start.ai` bootstrap checks at session start.
+- Confirmed `specify` is installed and runnable via `specify`.
+- Confirmed the current branch is `main`.
+- Confirmed there is still no monthly vulnerability audit entry recorded within the last 30 days, so the audit remains due once startup prerequisites are satisfied.
+- Identified a bootstrap blocker: `.repo_ai` is not attached as a real git submodule in the parent repository.
+- Evidence:
+- `git submodule status` returned no submodules.
+- Root `.gitmodules` is missing.
+- `git ls-files --stage .repo_ai .repo_ai/repo.ai` shows regular tracked files (`100644`) instead of a submodule gitlink (`160000`).
+- `.repo_ai/.git` points to `../.git/modules/.repo_ai`, but that gitdir does not exist, so `.repo_ai` is currently a broken vendored copy rather than a working submodule checkout.
+- Per `start.ai`, further execution is paused until `.repo_ai` is repaired as a submodule.
+
+2026-04-02 Update - `.repo_ai` Submodule Repair:
+- Removed the broken tracked-copy form of `.repo_ai` from the index and re-added it as a proper git submodule from `https://github.com/fishdan/repo-ai.git`.
+- `git submodule status` now reports `.repo_ai` at commit `26312e34921d1fcce1fce4d20c675b6c6b1a1c3c` on `heads/main`.
+- This satisfies the `start.ai` prerequisite that `.repo_ai` be attached as a submodule.
+- Spec Kit task note: the submodule-repair startup task can be considered complete.
+
+2026-04-02 Update - GitHub App Bootstrap Blocker:
+- After repairing the submodule, re-read `.repo_ai/repo.ai` and validated the expected secrets layout.
+- `.repo_ai/secrets/` currently contains only safe tracked files:
+- `README.md`
+- `config.example.txt`
+- Required local-only authentication files are missing:
+- `.repo_ai/secrets/config.txt`
+- a GitHub App private key `.pem` file
+- Because the GitHub App credentials are absent, the mandatory `.repo_ai/repo.ai` bootstrap cannot proceed.
+- Per the repo bootstrap rules, work is paused pending human provisioning of the GitHub App secrets.
+
+2026-04-02 Update - GitHub App Bootstrap Completed:
+- Re-checked `.repo_ai/secrets/` and confirmed the required local-only files now exist:
+- `.repo_ai/secrets/config.txt`
+- `.repo_ai/secrets/ai-codex-dan.2025-12-12.private-key.pem`
+- Ran `.repo_ai/scripts/github-app-setup-git-auth.sh` from the repo root.
+- Verified git bot identity:
+- `git config user.name` -> `ai-codex-dan[bot]`
+- `git config user.email` -> `2461425+ai-codex-dan[bot]@users.noreply.github.com`
+- `git log -1 --format='%an <%ae>'` -> `ai-codex-dan[bot] <2461425+ai-codex-dan[bot]@users.noreply.github.com>`
+- Verified the setup script validated access to the expected repositories:
+- `fishdan/repo-ai`
+- `fishdan/fishdan-terraform`
+- `fishdan/fdorgchart`
+- Token expiration reported by the setup script: `2026-04-02T16:49:12Z`
+- Spec Kit task note: the GitHub App bootstrap startup task can be considered complete.
+
+2026-04-02 Update - Monthly Vulnerability Audit:
+- Monthly audit was due because no audit entry existed in `progress.ai` within the last 30 days.
+- Confirmed there is no `frontend/` Node workspace in this repository, so the audit scope for this repo is Java/backend only.
+- Initial audit command:
+- `mvn org.owasp:dependency-check-maven:check -DnvdApiKey=***`
+- Initial findings from OWASP Dependency-Check:
+- `spring-core-6.1.13` flagged for `CVE-2024-38820`
+- `tomcat-embed-core-10.1.30` flagged for multiple CVEs including `CVE-2024-50379`, `CVE-2024-56337`, `CVE-2025-24813`, and `CVE-2026-24734`
+- `log4j-api-2.23.1` flagged for `CVE-2025-68161`
+- Remediation applied in `pom.xml`:
+- Upgraded the Spring Boot parent from `3.3.4` to `3.5.9`
+- Added explicit managed-property overrides:
+- `tomcat.version=10.1.52`
+- `log4j2.version=2.25.3`
+- Validation commands after remediation:
+- `mvn test -q`
+- `mvn org.owasp:dependency-check-maven:check -DnvdApiKey=***`
+- Validation results:
+- Test suite exited successfully after the dependency updates.
+- Follow-up OWASP Dependency-Check completed with no reported vulnerable dependencies.
+- Generated report path: `target/dependency-check-report.html`
+- Audit caveats noted during the run:
+- Dependency-Check emitted a non-fatal warning that the `.NET Assembly Analyzer` could not initialize because `dotnet` is not installed; the Java audit still completed successfully.
+- OSS Index analysis was skipped because authenticated Sonatype OSS Index credentials were not configured.
+- Spec Kit task note: the monthly vulnerability audit task can be considered complete for `2026-04-02`.
+
+2026-04-02 Update - Speckit Structure Alignment:
+- Reviewed the neighboring `../iby` repository to mirror its Spec Kit layout instead of continuing with the ad hoc `speckit/`-only structure in this repo.
+- Added `.specify/memory/constitution.md` so this repository now has the same top-level constitution location used by `../iby`.
+- Added the first numbered spec directory at `specs/001-security-hardening/`.
+- Created:
+- `specs/001-security-hardening/spec.md`
+- `specs/001-security-hardening/plan.md`
+- `specs/001-security-hardening/tasks.md`
+- The new spec formalizes the next defined work as a narrow security-hardening feature covering:
+- externalized datasource secrets
+- removal of startup password logging
+- hashed organization password storage
+- automated verification for the password-handling path
+- Spec Kit task note: `T0102` and `T0103` in `specs/001-security-hardening/tasks.md` are complete.
+- Guardrail note: implementation should not proceed outside `001-security-hardening`; the next correct engineering step is `T0101` on a dedicated feature branch, then the remaining tasks in that spec.
+
+2026-04-02 Update - `001-security-hardening` Implementation:
+- Created the dedicated feature branch `feature/001-security-hardening` from `main`.
+- Updated `src/main/resources/application.properties` to remove committed plaintext datasource values and replace them with environment-backed properties:
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- Added inline comments in `src/main/resources/application.properties` documenting those required env vars in a safe repo-visible location.
+- Removed the datasource password startup print from `src/main/java/com/fishdan/myorgchart/MyOrgChartApplication.java`.
+- Added a `PasswordEncoder` bean in `src/main/java/com/fishdan/myorgchart/MyOrgChartApplication.java`.
+- Updated `src/main/java/com/fishdan/myorgchart/organization/OrganizationService.java` so `createOrganization` hashes the submitted password before saving.
+- Updated `src/main/java/com/fishdan/myorgchart/organization/Organization.java` to make the password field write-only for JSON serialization so password hashes are not returned in API responses.
+- Added `spring-security-crypto` in `pom.xml` for BCrypt password hashing without pulling in full Spring Security web auth.
+- Added automated coverage:
+- `src/test/java/com/fishdan/myorgchart/organization/OrganizationServiceTest.java`
+- `src/test/java/com/fishdan/myorgchart/organization/OrganizationControllerTest.java`
+- Validation:
+- `mvn test -q` passed on `feature/001-security-hardening`
+- Manual startup verification:
+- First `mvn spring-boot:run` attempt with env-provided datasource values proved the app no longer printed the removed password line, but failed because local port `8080` was already in use.
+- Re-ran with `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=0` and the app started successfully against the externalized datasource configuration, then shut down cleanly under `timeout`.
+- Manual verification result: externalized datasource configuration works and the previous startup secret leak is gone.
+- Spec Kit task note: `T0101`, `T0110`, `T0111`, `T0112`, `T0120`, `T0121`, `T0122`, `T0123`, `T0130`, `T0131`, `T0132`, `T0140`, `T0141`, and `T0142` are complete.

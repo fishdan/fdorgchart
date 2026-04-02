@@ -2,14 +2,19 @@ package com.fishdan.myorgchart;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class MyOrgChartApplication {
 
     public static void main(String[] args) {
-
-        System.out.println("Database Password: " + System.getProperty("spring.datasource.password"));
         SpringApplication.run(MyOrgChartApplication.class, args);
     }
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

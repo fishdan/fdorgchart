@@ -1,0 +1,15 @@
+{
+  "name": "fdorgchart-e2e",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Browser-level end-to-end tests for fdorgchart",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:install": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

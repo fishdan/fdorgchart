@@ -184,3 +184,86 @@
 - Opened repo-ai PR:
 - `https://github.com/fishdan/repo-ai/pull/5`
 - User later confirmed the `.repo_ai` PR was merged.
+
+2026-04-02 Update - Spec 2 Setup:
+- Returned to `main` after confirmation that `fdorgchart` PR `#2` was merged.
+- Created the next feature branch:
+- `feature/002-frontend-e2e-tests`
+- Created the next Speckit scaffold:
+- `specs/002-frontend-e2e-tests/spec.md`
+- `specs/002-frontend-e2e-tests/plan.md`
+- `specs/002-frontend-e2e-tests/tasks.md`
+- Spec 2 is intentionally scoped to browser-level frontend validation of the existing Thymeleaf/JavaScript flows, with Playwright as the planned default framework.
+- Spec Kit task note: `T0201` and `T0202` in `specs/002-frontend-e2e-tests/tasks.md` are complete.
+- Guardrail note: the next work should stay inside `002-frontend-e2e-tests`; the next implementation step is selecting and wiring the E2E framework rather than making unrelated product changes.
+
+2026-04-02 Update - Spec 2 Phase 2 Foundation:
+- Selected Playwright as the browser automation framework for the frontend because this app is server-rendered with Thymeleaf plus browser JavaScript, and the testing goal is real user-visible flow coverage rather than frontend unit testing.
+- Added root Node/Playwright scaffolding:
+- `package.json`
+- `package-lock.json`
+- `playwright.config.js`
+- `tests/e2e/README.md`
+- Added `npm` scripts:
+- `npm run test:e2e`
+- `npm run test:e2e:headed`
+- `npm run test:e2e:debug`
+- `npm run test:e2e:install`
+- Added `scripts/run-e2e-server.sh` to start Spring Boot on port `18080` for Playwright's `webServer` integration.
+- The E2E server script now requires:
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- Updated `.gitignore` for Playwright artifacts:
+- `node_modules/`
+- `playwright-report/`
+- `test-results/`
+- Installed the initial browser-test dependency set with `npm install`.
+- Sanity checks:
+- `npx playwright --version` -> `1.59.1`
+- verified `playwright.config.js` resolves:
+- `testDir=./tests/e2e`
+- `baseURL=http://127.0.0.1:18080`
+- `webServer=./scripts/run-e2e-server.sh`
+- Spec Kit task note: `T0210`, `T0211`, and `T0212` are complete.
+
+2026-04-02 Update - Spec 2 Phase 3 and 4 Browser Coverage:
+- Added the initial Playwright browser suite at `tests/e2e/app.spec.js`.
+- The suite covers the main user-visible flows with unique per-run organization data to avoid collisions:
+- homepage load with expected title, heading, and navigation links
+- organization creation success
+- person creation success for an existing organization
+- person creation failure when the organization does not exist
+- org chart missing-organization state
+- org chart empty-organization state
+- org chart populated-organization state
+- Installed the Playwright browser runtime with:
+- `npm run test:e2e:install`
+- Initial execution exposed two harness issues that were corrected during implementation:
+- `scripts/run-e2e-server.sh` originally tried to execute `./mvnw` directly, which failed because the wrapper file is not executable in this repo; updated the script to invoke it through `bash ./mvnw`
+- the person-creation test originally used `getByLabel("Email")`, which was ambiguous because the page also contains `Supervisor Email`; updated the tests to use the concrete form field ids instead
+- Final browser validation command:
+- `SPRING_DATASOURCE_URL='jdbc:mariadb://fishdanaws.cvkyaweq6ujr.us-east-1.rds.amazonaws.com:3306/myorgchart' SPRING_DATASOURCE_USERNAME='dbmaster' SPRING_DATASOURCE_PASSWORD='***' npm run test:e2e`
+- Final browser validation result:
+- `7 passed`
+- Spec Kit task note: `T0220`, `T0221`, `T0222`, `T0223`, `T0230`, `T0231`, and `T0232` are complete.
+
+2026-04-02 Update - Spec 2 Validation:
+- Ran backend validation after the browser suite additions:
+- `mvn test -q`
+- Backend validation passed with the new E2E assets present in the repo.
+- Spec Kit task note: `T0240`, `T0241`, and `T0242` are complete.
+
+2026-04-02 Update - Mockito Test Harness Hardening:
+- During full-suite validation on Java 21, Maven test output showed Mockito self-attaching a Byte Buddy agent at runtime and the JVM warned that dynamic agent loading will be disallowed by default in a future JDK.
+- Confirmed the repo does not contain a custom Mockito extension file under `src/test/resources`, so the behavior came from the default Mockito/Spring test stack rather than a repo-local override.
+- Resolved the warning by configuring `maven-surefire-plugin` in `pom.xml` to launch tests with an explicit Mockito Java agent:
+- `-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar`
+- Validation after the fix:
+- `mvn test -q`
+- `SPRING_DATASOURCE_URL='jdbc:mariadb://fishdanaws.cvkyaweq6ujr.us-east-1.rds.amazonaws.com:3306/myorgchart' SPRING_DATASOURCE_USERNAME='dbmaster' SPRING_DATASOURCE_PASSWORD='***' npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright E2E suite passed with `7 passed`
+- The prior Mockito self-attach warning no longer appears. One unrelated JVM CDS warning remains:
+- `Sharing is only supported for boot loader classes because bootstrap classpath has been appended`

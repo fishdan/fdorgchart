@@ -165,3 +165,22 @@
 - Re-ran with `mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=0` and the app started successfully against the externalized datasource configuration, then shut down cleanly under `timeout`.
 - Manual verification result: externalized datasource configuration works and the previous startup secret leak is gone.
 - Spec Kit task note: `T0101`, `T0110`, `T0111`, `T0112`, `T0120`, `T0121`, `T0122`, `T0123`, `T0130`, `T0131`, `T0132`, `T0140`, `T0141`, and `T0142` are complete.
+
+2026-04-02 Update - `001-security-hardening` Review Handoff:
+- Committed the feature work as the GitHub App bot:
+- `5390f23` - `Harden secrets handling and add Speckit workflow`
+- Pushed branch:
+- `feature/001-security-hardening`
+- Opened PR for review:
+- `#2` - `Harden secrets handling and add Speckit workflow`
+- `https://github.com/fishdan/fdorgchart/pull/2`
+- Status check at 2026-04-02: PR `#2` is open and not yet merged.
+- Spec Kit task note: `T0150`, `T0151`, and `T0152` are complete. The implementation spec is complete; only the actual repository merge remains outside the task list.
+
+2026-04-02 Update - `.repo_ai` Follow-Up:
+- Added guidance in `.repo_ai/repo.ai` to avoid external GitHub connector/plugin integrations when the local `.repo_ai` GitHub App workflow is available.
+- Pushed submodule repo branch:
+- `feature/avoid-github-connector`
+- Opened repo-ai PR:
+- `https://github.com/fishdan/repo-ai/pull/5`
+- User later confirmed the `.repo_ai` PR was merged.

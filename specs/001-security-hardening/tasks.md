@@ -35,6 +35,6 @@
 - [x] T0142 Record implementation decisions, commands, and results in `progress.ai`. *(Completed 2026-04-02: progress log updated with branch creation, security changes, and validation evidence.)*
 
 ## Phase 6 - Review Handoff
-- [ ] T0150 Commit the completed hardening work with the GitHub App identity.
-- [ ] T0151 Push the feature branch to `origin`.
-- [ ] T0152 Open a PR for review.
+- [x] T0150 Commit the completed hardening work with the GitHub App identity. *(Completed 2026-04-02: commit `5390f23` (`Harden secrets handling and add Speckit workflow`) authored as `ai-codex-dan[bot]`.)*
+- [x] T0151 Push the feature branch to `origin`. *(Completed 2026-04-02: pushed `feature/001-security-hardening` to `origin`.)*
+- [x] T0152 Open a PR for review. *(Completed 2026-04-02: opened PR `#2`, `Harden secrets handling and add Speckit workflow` -> `https://github.com/fishdan/fdorgchart/pull/2`.)*

@@ -1,0 +1,20 @@
+2026-04-02 Update - Progress Log Bootstrap:
+- Created `progress.ai` using the structure and logging guidance defined in `start.ai`.
+- Established this file as the current-month working log for decisions, implementation notes, validation results, and operational follow-up.
+- Confirmed `specify` is installed and runnable via `/home/dfish/.local/bin/specify`.
+- Ran `specify --help` to satisfy the startup check that Spec Kit is installed.
+- Added an initial Speckit constitution at `speckit/constitution.md`.
+- Updated the constitution to emphasize modular, reusable code and the preference for POJOs over DTOs unless a concrete boundary requires otherwise.
+- Added a TDD preference to the constitution, including a bias toward failing tests or executable checks before implementation when practical.
+- Added a commenting standard to the constitution that assumes both AI and human maintainers will work in the codebase.
+- Startup instruction review completed for `start.ai` and `.repo_ai/repo.ai`.
+- `progress.ai` did not exist before this update, so there is no recorded monthly vulnerability audit within the last 30 days in this log.
+- Follow-up required: perform and document the monthly vulnerability audit flow described in `start.ai` before discretionary engineering work continues.
+
+2026-04-02 Update - Repository Review Context:
+- Verified the repository builds with system Maven using `mvn test -q` and `mvn -q -DskipTests package`.
+- Verified the application starts locally with `mvn spring-boot:run` and serves the homepage on `http://127.0.0.1:8080/`.
+- Confirmed a live MariaDB connection is configured and reachable from the application runtime.
+- Identified that the `Create Person` HTML form is currently broken because the browser submits form-encoded data while `PersonController` expects JSON via `@RequestBody`.
+- Identified plaintext database credentials committed in `src/main/resources/application.properties`.
+- Identified unsafe password handling in the `Organization` entity and startup password logging in `MyOrgChartApplication`.

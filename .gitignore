@@ -36,3 +36,8 @@ build/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Node / Playwright
+node_modules/
+playwright-report/
+test-results/

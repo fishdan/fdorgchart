@@ -218,6 +218,58 @@
 - `node_modules/`
 - `playwright-report/`
 - `test-results/`
+
+2026-04-03 Update - Spec 3 Setup:
+- Created the next feature branch:
+- `feature/003-local-dev-db`
+- Created the next Speckit scaffold:
+- `specs/003-local-dev-db/spec.md`
+- `specs/003-local-dev-db/plan.md`
+- `specs/003-local-dev-db/tasks.md`
+- Spec 3 is intentionally scoped to an explicit development-only datasource path so local work points to a local database without changing production or deployed runtime behavior.
+- Current design direction captured in the spec:
+- use a development-only Spring configuration boundary, most likely a `dev` profile
+- keep base/default runtime configuration production-safe and environment-driven
+- verify both the dev path and the non-dev path before implementation is considered complete
+- Spec Kit task note: `T0301` and `T0302` in `specs/003-local-dev-db/tasks.md` are complete.
+- Guardrail note: the next work should stay inside `003-local-dev-db`; implementation should focus on configuration isolation and documentation, not unrelated database or deployment changes.
+
+2026-04-03 Update - `003-local-dev-db` Implementation:
+- Selected an explicit Spring `dev` profile as the isolation boundary for local database behavior.
+- Updated `src/main/resources/application.properties` so the base datasource URL now requires `SPRING_DATASOURCE_URL` and no longer defaults to `localhost`.
+- Added `src/main/resources/application-dev.properties` so local development can intentionally use `jdbc:mariadb://localhost:3306/myorgchart` when `SPRING_PROFILES_ACTIVE=dev`.
+- Added `scripts/run-dev-server.sh` so local development can start the app against the `dev` profile with one command after setting local DB credentials.
+- Kept datasource credentials environment-driven in both paths so no local or production secrets are committed.
+- Updated `README.md` to document:
+- the local development startup flow with `SPRING_PROFILES_ACTIVE=dev`
+- the helper script `bash ./scripts/run-dev-server.sh`
+- the fact that deployed environments must not activate `dev`
+- the production/deployment expectation that datasource settings remain explicitly environment-provided
+- Added `src/test/java/com/fishdan/myorgchart/DatabaseConfigurationTest.java` to verify:
+- base config requires `SPRING_DATASOURCE_URL`
+- the `dev` profile defaults the datasource URL to the local MariaDB host
+- Verification:
+- initial `./mvnw` execution failed because the wrapper file is not executable in this checkout (`Permission denied`)
+- reran via `bash ./mvnw -q -Dtest=DatabaseConfigurationTest test` and it passed
+- ran `bash ./mvnw -q test` and the full test suite passed
+- Spec Kit task note: `T0310`, `T0311`, `T0312`, `T0320`, `T0321`, `T0322`, `T0330`, `T0331`, `T0332`, `T0340`, and `T0341` are complete.
+
+2026-04-03 Update - `003-local-dev-db` Dev-Server E2E Validation:
+- Added a real Playwright browser test that creates:
+- one organization
+- one top-level leader
+- two direct reports under that leader
+- The new test verifies the org chart renders as one root node with exactly two direct children and no deeper nesting for that scenario.
+- Added a `dev`-profile-only cleanup endpoint at `/api/dev/test-data/organization` so test-created data can be removed without exposing deletion behavior in production.
+- Updated the Playwright server bootstrap to activate the `dev` profile by default so E2E runs exercise the explicit local-database configuration path.
+- Local database validation commands:
+- `mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS myorgchart;"`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Validation result:
+- Playwright passed with `8 passed`
+- the hierarchy test successfully created the org and three people against the local MariaDB-backed dev server
+- the cleanup endpoint deleted `1` organization and `3` people after verification
+- Publish note: `gh` is installed locally, but the current GitHub CLI auth token is invalid, so PR creation should use the GitHub connector path instead of `gh`.
 - Installed the initial browser-test dependency set with `npm install`.
 - Sanity checks:
 - `npx playwright --version` -> `1.59.1`
@@ -281,3 +333,30 @@
 - `#3` - `Add Playwright frontend end-to-end coverage`
 - `https://github.com/fishdan/fdorgchart/pull/3`
 - Spec Kit task note: `T0250`, `T0251`, and `T0252` are complete.
+
+2026-04-03 Update - Session Bootstrap Review:
+- Re-ran the `start.ai` workflow at session start and confirmed `.repo_ai` is attached as a real git submodule via `git submodule status -- .repo_ai`.
+- Re-verified Spec Kit availability by running `specify`.
+- Re-read `.repo_ai/repo.ai` and refreshed GitHub App authentication with `.repo_ai/scripts/github-app-setup-git-auth.sh`.
+- Verified bot commit identity remains active:
+- `git config user.name` -> `ai-codex-dan[bot]`
+- `git config user.email` -> `2461425+ai-codex-dan[bot]@users.noreply.github.com`
+- `git log -1 --format='%an <%ae>'` -> `ai-codex-dan[bot] <2461425+ai-codex-dan[bot]@users.noreply.github.com>`
+- Monthly vulnerability audit status check:
+- the latest recorded audit is dated `2026-04-02`
+- because that is within the last 30 days, the monthly audit is not due on `2026-04-03`
+- Reviewed the active Speckit task files:
+- `specs/001-security-hardening/tasks.md` is fully complete
+- `specs/002-frontend-e2e-tests/tasks.md` is fully complete
+- Confirmed repository state from `main`:
+- current branch is `main`
+- worktree is clean
+- `main` already contains merge commit `d093ffa` for PR `#3` (`feature/002-frontend-e2e-tests`)
+- Follow-up repository activity after the spec merges currently appears to be commit `c7f2f60` (`Add project README`)
+- Progress log maintenance note:
+- `progress.ai` is now over 200 lines, but all entries are still from the current month, so no archive split is needed yet under the 30-60 day retention rule
+- Speckit completion note:
+- spec `002-frontend-e2e-tests` is now not only task-complete but also merged into `main`
+- Recommendation for next work:
+- do not start unrelated implementation on `main`
+- define the next tracked Speckit item first (for example a `003-...` spec) and only then branch for implementation

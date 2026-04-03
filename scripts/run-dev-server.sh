@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-PORT="${E2E_PORT:-18080}"
+PORT="${PORT:-8080}"
 
 required_vars=(
   SPRING_DATASOURCE_USERNAME
@@ -17,7 +17,8 @@ for var_name in "${required_vars[@]}"; do
 done
 
 if (( ${#missing_vars[@]} > 0 )); then
-  printf 'Missing required E2E environment variables: %s\n' "${missing_vars[*]}" >&2
+  printf 'Missing required local dev environment variables: %s\n' "${missing_vars[*]}" >&2
+  printf 'Set SPRING_DATASOURCE_USERNAME and SPRING_DATASOURCE_PASSWORD before starting the dev server.\n' >&2
   exit 1
 fi
 

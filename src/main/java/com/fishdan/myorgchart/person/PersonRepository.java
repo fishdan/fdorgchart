@@ -1,6 +1,7 @@
 package com.fishdan.myorgchart.person;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     default List<Person> findByDomain(String domain) {
         return findByDomainIgnoreCase(domain);
     }
+
+    @Transactional
+    long deleteByDomainIgnoreCase(String domain);
 }

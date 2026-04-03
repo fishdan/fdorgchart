@@ -2,6 +2,7 @@ package com.fishdan.myorgchart.organization;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -20,7 +21,9 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
     default Organization findByDomain(String domain) {
         return findByDomainIgnoreCase(domain);
     }
-}
 
+    @Transactional
+    long deleteByDomainIgnoreCase(String domain);
+}
 
 

@@ -101,7 +101,7 @@ CREATE DATABASE myorgchart;
 
 ### 2. Set environment variables
 
-The app reads its database connection from environment variables:
+Production and non-development runs read their database connection from environment variables:
 
 ```bash
 export SPRING_DATASOURCE_URL=jdbc:mariadb://localhost:3306/myorgchart
@@ -109,13 +109,44 @@ export SPRING_DATASOURCE_USERNAME=your_db_user
 export SPRING_DATASOURCE_PASSWORD=your_db_password
 ```
 
-If you do not set `SPRING_DATASOURCE_URL`, the app defaults to:
+### 3. Start the app for local development
+
+For local development, activate the `dev` Spring profile. That profile intentionally points the app at a local MariaDB instance and keeps this localhost behavior out of the default production-safe configuration.
+
+```bash
+export SPRING_PROFILES_ACTIVE=dev
+export SPRING_DATASOURCE_USERNAME=your_local_db_user
+export SPRING_DATASOURCE_PASSWORD=your_local_db_password
+bash ./scripts/run-dev-server.sh
+```
+
+When the `dev` profile is active and `SPRING_DATASOURCE_URL` is not set, the app defaults to:
 
 ```text
 jdbc:mariadb://localhost:3306/myorgchart
 ```
 
-### 3. Start the app
+You can still override the local dev URL explicitly by setting `SPRING_DATASOURCE_URL`.
+
+If you prefer not to use the helper script, this is the equivalent direct command:
+
+```bash
+export SPRING_PROFILES_ACTIVE=dev
+bash ./mvnw spring-boot:run
+```
+
+### 4. Start the app for production or other deployed environments
+
+Production and deployed environments should not activate the `dev` profile. They should continue providing all datasource settings explicitly:
+
+```bash
+export SPRING_DATASOURCE_URL=jdbc:mariadb://your-db-host:3306/myorgchart
+export SPRING_DATASOURCE_USERNAME=your_db_user
+export SPRING_DATASOURCE_PASSWORD=your_db_password
+./mvnw spring-boot:run
+```
+
+### 5. Build and run the jar
 
 With the Maven wrapper:
 
@@ -173,13 +204,14 @@ Minimum requirements:
    - `SPRING_DATASOURCE_URL`
    - `SPRING_DATASOURCE_USERNAME`
    - `SPRING_DATASOURCE_PASSWORD`
-3. Build the application:
+3. Do not activate the `dev` profile in deployed environments; it exists only to make local development point at `localhost`.
+4. Build the application:
 
 ```bash
 ./mvnw clean package
 ```
 
-4. Deploy the generated jar:
+5. Deploy the generated jar:
 
 ```bash
 java -jar MyOrgChart-0.0.1-SNAPSHOT.jar
@@ -208,9 +240,10 @@ Typical pattern:
 2. Install or connect to MariaDB.
 3. Clone the repo.
 4. Export the datasource env vars.
-5. Run `./mvnw clean package`.
-6. Start `java -jar MyOrgChart-0.0.1-SNAPSHOT.jar`.
-7. Put Nginx or Caddy in front of it if you want TLS and a public domain.
+5. Ensure `SPRING_PROFILES_ACTIVE` is unset or set to a non-`dev` profile for the deployed service.
+6. Run `./mvnw clean package`.
+7. Start `java -jar MyOrgChart-0.0.1-SNAPSHOT.jar`.
+8. Put Nginx or Caddy in front of it if you want TLS and a public domain.
 
 ### Running behind a reverse proxy
 
@@ -269,4 +302,3 @@ Key files:
 - `src/main/resources/application.properties` - runtime configuration
 - `src/test/java` - backend tests
 - `tests/e2e` - Playwright tests
-

@@ -37,6 +37,37 @@ async function createPerson(page, suffix, domain, namePrefix = "E2E Person") {
   return { email };
 }
 
+async function createPersonWithSupervisor(
+  page,
+  suffix,
+  domain,
+  {
+    emailPrefix,
+    name,
+    department,
+    supervisorEmail
+  }
+) {
+  const email = `${emailPrefix}-${suffix}@${domain}`;
+
+  await page.goto("/create-person");
+  await page.locator("#fullName").fill(name);
+  await page.locator("#email").fill(email);
+  await page.locator("#domain").fill(domain);
+  await page.locator("#department").fill(department);
+
+  if (supervisorEmail) {
+    await page.locator("#supervisorEmail").fill(supervisorEmail);
+  }
+
+  await page.getByRole("button", { name: "Create Person" }).click();
+
+  await expect(page).toHaveURL(/\/create-person\?success=true$/);
+  await expect(page.getByText("Person created successfully!")).toBeVisible();
+
+  return { email };
+}
+
 async function loadOrgChart(page, domain) {
   await page.goto("/orgchart");
   await page.getByPlaceholder("Enter organization domain").fill(domain);
@@ -117,4 +148,54 @@ test("org chart shows people for a populated organization", async ({ page }) => 
   await expect(page.locator("#orgchart-tree li")).toHaveCount(1);
   await expect(page.locator("#orgchart-tree")).toContainText(`Org Chart User ${suffix}`);
   await expect(page.locator("#orgchart-tree")).toContainText(`person-${suffix}@${domain}`);
+});
+
+test("org chart shows a top leader with two direct reports and cleans up afterwards", async ({ page, request }) => {
+  const suffix = uniqueSuffix();
+  const { domain } = await createOrganization(page, suffix);
+
+  try {
+    const ceo = await createPersonWithSupervisor(page, suffix, domain, {
+      emailPrefix: "ceo",
+      name: `Chief Executive ${suffix}`,
+      department: "Executive"
+    });
+
+    const engineerOne = await createPersonWithSupervisor(page, suffix, domain, {
+      emailPrefix: "engineer-one",
+      name: `Engineer One ${suffix}`,
+      department: "Engineering",
+      supervisorEmail: ceo.email
+    });
+
+    const engineerTwo = await createPersonWithSupervisor(page, suffix, domain, {
+      emailPrefix: "engineer-two",
+      name: `Engineer Two ${suffix}`,
+      department: "Engineering",
+      supervisorEmail: ceo.email
+    });
+
+    await loadOrgChart(page, domain);
+
+    const tree = page.locator("#orgchart-tree");
+    const rootNode = tree.locator(":scope > li");
+    const directReports = rootNode.locator(":scope > ul > li");
+
+    await expect(rootNode).toHaveCount(1);
+    await expect(rootNode).toContainText(`Chief Executive ${suffix}`);
+    await expect(rootNode).toContainText(ceo.email);
+    await expect(directReports).toHaveCount(2);
+    await expect(directReports.nth(0)).toContainText(`Engineer One ${suffix}`);
+    await expect(directReports.nth(0)).toContainText(engineerOne.email);
+    await expect(directReports.nth(1)).toContainText(`Engineer Two ${suffix}`);
+    await expect(directReports.nth(1)).toContainText(engineerTwo.email);
+    await expect(rootNode.locator(":scope > ul > li > ul > li")).toHaveCount(0);
+  } finally {
+    const response = await request.delete(`/api/dev/test-data/organization?domain=${domain}`);
+    expect(response.ok()).toBeTruthy();
+
+    const cleanup = await response.json();
+    expect(cleanup.deletedOrganizations).toBe(1);
+    expect(cleanup.deletedPeople).toBe(3);
+  }
 });

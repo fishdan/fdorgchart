@@ -80,6 +80,6 @@
 - [x] T0473 Record implementation decisions, validation commands, and outcomes in `progress.ai`. *(Completed 2026-04-09: logged phase-by-phase implementation and final validation results in `progress.ai`.)*
 
 ## Phase 9 - Review Handoff
-- [ ] T0480 Commit the completed private-account work with the GitHub App identity.
-- [ ] T0481 Push the feature branch to `origin`.
-- [ ] T0482 Open a PR for review.
+- [x] T0480 Commit the completed private-account work with the GitHub App identity. *(Completed 2026-04-09: committed the full `004` feature set as `e7e4f72` with message `Implement private accounts and official org controls`.)*
+- [x] T0481 Push the feature branch to `origin`. *(Completed 2026-04-09: pushed `feature/004-private-accounts` to `origin` and set upstream tracking.)*
+- [x] T0482 Open a PR for review. *(Completed 2026-04-09: opened draft PR `#5` - `Implement private accounts and official org controls` - `https://github.com/fishdan/fdorgchart/pull/5`.)*

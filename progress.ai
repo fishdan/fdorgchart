@@ -722,3 +722,31 @@
 - Playwright passed with `13 passed`
 - Speckit completion note:
 - `T0460` through `T0464` are complete
+
+2026-04-09 Update - Spec 004 Documentation And Review Handoff:
+- Updated `README.md` to document:
+- the preserved free open-organization self-entry flow
+- private-account registration and verification
+- SES sender configuration
+- DNS TXT verification and official-domain claims
+- admin approvals and admin-role controls
+- private/public org-chart behavior
+- Final validation for the completed `004` feature set:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `13 passed`
+- Committed the full feature branch work as:
+- `e7e4f72` - `Implement private accounts and official org controls`
+- Pushed branch:
+- `feature/004-private-accounts`
+- Opened draft PR for review:
+- `#5` - `Implement private accounts and official org controls`
+- `https://github.com/fishdan/fdorgchart/pull/5`
+- Publishing note:
+- the GitHub App connector returned `403 Resource not accessible by integration` for PR creation in this repo
+- PR creation succeeded through `gh pr create` using the configured repo auth
+- Speckit completion note:
+- `T0470` through `T0473` are complete
+- `T0480` through `T0482` are complete

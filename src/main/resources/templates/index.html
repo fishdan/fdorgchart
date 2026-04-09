@@ -10,6 +10,21 @@
   <h1 class="mb-4">Welcome to MyOrgChart</h1>
   <p class="lead">Build an organization, add people to it, and then view the reporting structure.</p>
 
+  <div th:if="${verified}" class="alert alert-success text-start mx-auto" style="max-width: 720px;" role="alert">
+    Your private account email has been verified.
+  </div>
+
+  <div th:if="${login}" class="alert alert-success text-start mx-auto" style="max-width: 720px;" role="alert">
+    You are now logged in to your private account.
+  </div>
+
+  <div th:if="${accountEmail}" class="alert alert-secondary text-start mx-auto" style="max-width: 720px;" role="alert">
+    Signed in as <strong th:text="${accountEmail}"></strong>
+    <form action="/account/logout" method="post" class="mt-2">
+      <button type="submit" class="btn btn-sm btn-outline-dark">Log Out</button>
+    </form>
+  </div>
+
   <div class="alert alert-info text-start mx-auto" style="max-width: 720px;" role="alert">
     <strong>How to use this app:</strong>
     <div>1. Create an organization first using its domain, for example `fishdan.com`.</div>
@@ -21,6 +36,12 @@
     <a href="/create-organization" class="btn btn-primary btn-lg m-2">Create Organization</a>
     <a href="/create-person" class="btn btn-secondary btn-lg m-2">Create Person</a>
     <a href="/orgchart" class="btn btn-info">See Org Chart</a>
+  </div>
+
+  <div class="mt-3">
+    <a href="/register" class="btn btn-outline-primary m-2">Create Private Account</a>
+    <a href="/login" class="btn btn-outline-secondary m-2">Log In</a>
+    <a th:if="${accountEmail}" href="/settings" class="btn btn-outline-dark m-2">Settings</a>
   </div>
 </div>
 

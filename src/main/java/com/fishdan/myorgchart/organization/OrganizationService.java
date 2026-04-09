@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class OrganizationService {
@@ -24,10 +25,13 @@ public class OrganizationService {
     }
 
     public Organization createOrganization(Organization organization) {
-        if (organizationRepository.existsByDomain(organization.getDomain())) {
+        String normalizedDomain = organization.getDomain().trim().toLowerCase(Locale.ROOT);
+        if (organizationRepository.existsByDomain(normalizedDomain)) {
             throw new IllegalArgumentException("Domain already exists. Please choose another one.");
         }
+        organization.setDomain(normalizedDomain);
         organization.setPassword(passwordEncoder.encode(organization.getPassword()));
+        organization.setOwnershipType(OrganizationOwnership.OPEN);
         return organizationRepository.save(organization);
     }
 

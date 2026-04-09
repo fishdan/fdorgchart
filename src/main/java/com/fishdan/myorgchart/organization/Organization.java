@@ -26,6 +26,14 @@ public class Organization {
     @NotBlank(message = "Email is required")
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrganizationOwnership ownershipType = OrganizationOwnership.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrganizationChartVisibility chartVisibility = OrganizationChartVisibility.PUBLIC;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -65,5 +73,29 @@ public class Organization {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public OrganizationOwnership getOwnershipType() {
+        return ownershipType == null ? OrganizationOwnership.OPEN : ownershipType;
+    }
+
+    public void setOwnershipType(OrganizationOwnership ownershipType) {
+        this.ownershipType = ownershipType;
+    }
+
+    public boolean isOfficial() {
+        return getOwnershipType() == OrganizationOwnership.OFFICIAL;
+    }
+
+    public OrganizationChartVisibility getChartVisibility() {
+        return chartVisibility == null ? OrganizationChartVisibility.PUBLIC : chartVisibility;
+    }
+
+    public void setChartVisibility(OrganizationChartVisibility chartVisibility) {
+        this.chartVisibility = chartVisibility;
+    }
+
+    public boolean isPrivateChart() {
+        return getChartVisibility() == OrganizationChartVisibility.PRIVATE;
     }
 }

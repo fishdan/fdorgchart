@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Create Private Account</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Create Private Account</h1>
+
+  <div class="alert alert-info" role="alert">
+    <strong>Optional feature:</strong>
+    <div>This account flow adds private-account capabilities, but it does not replace the normal no-login org-chart workflow.</div>
+    <div>If an email address is not reserved by a verified private account, people can still add themselves through the public flow.</div>
+  </div>
+
+  <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+  <div class="card shadow-lg p-4">
+    <form action="/account/register" method="post">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address</label>
+        <input type="email" id="email" name="email" class="form-control" th:value="${email}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-control" required>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/login" class="btn btn-outline-primary me-2">Log In Instead</a>
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+</body>
+</html>

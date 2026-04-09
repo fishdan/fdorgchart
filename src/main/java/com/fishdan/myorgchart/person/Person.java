@@ -29,6 +29,10 @@ public class Person {
 
     private String supervisorEmail; // Can be null if no supervisor
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PersonApprovalStatus approvalStatus = PersonApprovalStatus.APPROVED;
+
     @ManyToOne
     @JoinColumn(name = "organization_id", referencedColumnName = "id")
     @NotNull(message = "Organization is required")
@@ -53,7 +57,11 @@ public class Person {
     public String getSupervisorEmail() { return supervisorEmail; }
     public void setSupervisorEmail(String supervisorEmail) { this.supervisorEmail = supervisorEmail; }
 
+    public PersonApprovalStatus getApprovalStatus() {
+        return approvalStatus == null ? PersonApprovalStatus.APPROVED : approvalStatus;
+    }
+    public void setApprovalStatus(PersonApprovalStatus approvalStatus) { this.approvalStatus = approvalStatus; }
+
     public Organization getOrganization() { return organization; }
     public void setOrganization(Organization organization) { this.organization = organization; }
 }
-

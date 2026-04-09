@@ -86,7 +86,18 @@ Rules:
 - If work is requested outside a tracked task, pause and decide whether it should be formalized first.
 - Mark tasks complete only when implementation and verification are both complete.
 
-## 9. Exceptions
+## 9. Preserve The Free Org-Building Flow
+
+The unauthenticated self-entry flow is a core product invariant.
+
+Rules:
+- Maintain the simple free version where a manager can invite an organization by email and people can add themselves without creating accounts or logging in.
+- If an email address is not reserved by a verified private account, it must remain addable to an organization through the public flow.
+- If an organization is not owned or official-domain-controlled, the public self-entry flow must remain available.
+- New account, ownership, admin, or privacy features must layer on top of the free flow rather than replacing it.
+- Any proposed change that would require login for the general self-entry case must be treated as a spec violation unless an explicit exception is documented and approved.
+
+## 10. Exceptions
 
 Exceptions are allowed only when they are intentional and documented.
 

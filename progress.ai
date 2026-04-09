@@ -270,6 +270,66 @@
 - the hierarchy test successfully created the org and three people against the local MariaDB-backed dev server
 - the cleanup endpoint deleted `1` organization and `3` people after verification
 - Publish note: `gh` is installed locally, but the current GitHub CLI auth token is invalid, so PR creation should use the GitHub connector path instead of `gh`.
+
+2026-04-03 Update - Spec 4 Setup:
+- Pulled `origin/main` forward before branching so the next spec starts from the merged `003-local-dev-db` baseline.
+- Created the next feature branch:
+- `feature/004-private-accounts`
+- Created the next Speckit scaffold:
+- `specs/004-private-accounts/spec.md`
+- `specs/004-private-accounts/plan.md`
+- `specs/004-private-accounts/tasks.md`
+- Spec 4 is intentionally split into logical delivery phases instead of one implementation block:
+- account registration, login, and email verification
+- private-account ownership enforcement and self-service membership management
+- official-domain and claim flows through DNS TXT verification
+- org admin controls and provisional membership approval
+- org chart privacy controls
+- Referenced infrastructure dependency:
+- SES integration should follow the existing AWS SES setup documented in `../fishdan-terraform/aws/ses.tf`
+- Key product constraints captured in the spec:
+- verification code sending limited to once every 5 minutes and at most 5 sends per address per day
+- DNS verification checks limited to once every 10 minutes per active verification flow
+- verified private-account emails can only be added to orgs by the account owner
+- official-domain self-joins are provisional until admin approval
+- private org charts must display a private-chart message instead of the org tree
+- Spec Kit task note: `T0401` and `T0402` in `specs/004-private-accounts/tasks.md` are complete.
+- Guardrail note: this spec is intentionally large, so implementation should proceed phase-by-phase rather than attempting the whole system in one pass.
+
+2026-04-03 Update - Spec 4 Data-Model Discussion:
+- Discussed Phase 2 assumptions for `004-private-accounts`.
+- Initial user-proposed direction:
+- `users` table with `email` as the primary key
+- JWT-based authentication
+- a verification timestamp field such as `verification_sent`
+- a single status field such as `none|verified|admin`
+- Design correction captured:
+- global `admin` status on the user row is the wrong model because admin is organization-specific, not user-global
+- Recommended direction:
+- keep account identity in `users`
+- store org-specific role and approval state on a membership record instead of the user row
+- Example org-specific fields discussed for membership:
+- role (`member` / `admin`)
+- approval state (`provisional` / `approved`)
+- department
+- supervisor email
+- Discussed whether one user should be able to control multiple `person` records.
+- Recommendation:
+- do not make “one user controls multiple free-form person records” the primary design
+- instead separate identity from org participation:
+- `User` = login identity
+- `OrganizationMembership` or equivalent = org-specific presence/profile
+- Noted product impact:
+- a pure `User + OrganizationMembership` model would change the current unauthenticated person-add flow
+- Safer rollout recommendation is a staged hybrid model:
+- keep the current `Person` / `Organization` model temporarily
+- add `User`
+- allow `Person` records to remain for unauthenticated/non-private cases
+- enforce that verified private-account emails can only be managed by their account owner
+- Open product decision left intentionally unresolved:
+- whether to fully replace `Person` with membership records now or preserve a hybrid path so unauthenticated flows continue during transition
+- Follow-up note:
+- implementation of Phase 2 data modeling is paused pending user decision on how aggressively to change the existing anonymous person-record model
 - Installed the initial browser-test dependency set with `npm install`.
 - Sanity checks:
 - `npx playwright --version` -> `1.59.1`
@@ -278,6 +338,144 @@
 - `baseURL=http://127.0.0.1:18080`
 - `webServer=./scripts/run-e2e-server.sh`
 - Spec Kit task note: `T0210`, `T0211`, and `T0212` are complete.
+
+2026-04-09 Update - Session Bootstrap Review:
+- Re-ran the `start.ai` workflow at session start and confirmed `.repo_ai` is attached as a real git submodule via `git submodule status -- .repo_ai`.
+- Re-verified Spec Kit availability by running `specify`.
+- Re-read `.repo_ai/repo.ai` and refreshed GitHub App authentication with `bash .repo_ai/scripts/github-app-setup-git-auth.sh`.
+- Verified git bot identity is configured for future commits:
+- `git config user.name` -> `ai-codex-dan[bot]`
+- `git config user.email` -> `2461425+ai-codex-dan[bot]@users.noreply.github.com`
+- Monthly vulnerability audit status check:
+- the latest recorded audit is dated `2026-04-02`
+- because that is within the last 30 days, the monthly audit is not due on `2026-04-09`
+- Reviewed the active Speckit materials for `004-private-accounts` on branch `feature/004-private-accounts`.
+- Confirmed the tracked work is still in the phase-2 design-decision stage:
+- `T0410` choose the authentication/session approach
+- `T0411` define the persistence model
+- `T0412` finalize verification-code abuse-control semantics
+- `T0413` finalize domain-claim control and last-admin safety rules
+- `T0414` define private org-chart authorization rules
+- Guardrail note:
+- implementation should not move into `T0420+` until the phase-2 design tasks above are made explicit in the spec artifacts
+- Commit-history note:
+- `git log -1 --format='%an <%ae>'` currently shows `Daniel Fishman <fishdan@yahoo.com>` for the latest existing commit
+- bot identity is now configured correctly for any new commits made in this session
+- Recommendation for next work:
+- stay inside spec `004-private-accounts`
+- complete and document `T0410` through `T0414` first
+- after those are explicit, the next valid implementation slice is Phase 3 / User Story 1 (`T0420` through `T0425`)
+
+2026-04-09 Update - Spec 004 Free-Flow Guardrail:
+- Revisited spec `004-private-accounts` to protect the core free product behavior.
+- Added a new constitution rule in `.specify/memory/constitution.md` stating that the unauthenticated self-entry flow is a core product invariant.
+- Documented that:
+- a manager must still be able to invite an organization by email and have people add themselves without login
+- unreserved email addresses must remain addable through the public flow
+- non-owned organizations must keep the public self-entry path
+- account/admin/privacy features must layer on top of that free flow instead of replacing it
+- Updated `specs/004-private-accounts/spec.md` to make the free self-entry model explicit in scope boundaries, product rules, requirements, and success criteria.
+- Updated `specs/004-private-accounts/plan.md` so the free flow is treated as a permanent product mode and included in verification strategy.
+- Updated `specs/004-private-accounts/tasks.md` to add:
+- `T0415` for the explicit non-regression rule
+- `T0436` for regression coverage proving the public unreserved-email flow still works without login
+- Current impact assessment:
+- no implementation work from spec `004` has landed yet
+- the main risk was ambiguous spec wording, not shipped code
+- no known current behavior regression was introduced by spec `004` implementation because spec `004` implementation has not started
+
+2026-04-09 Update - Spec 004 Phase 2 Decisions:
+- Completed the phase-2 design block for `specs/004-private-accounts/`.
+- Authentication/session decision (`T0410`):
+- selected server-side browser session auth using `HttpSession`/`JSESSIONID` for private-account features
+- explicitly rejected JWT for v1 because the app is already server-rendered and the simpler session model keeps the public flow untouched
+- Persistence decision (`T0411`):
+- keep `Person` as the org-chart row model so the free self-entry path remains intact
+- define organizations as `OPEN` versus `OFFICIAL`
+- add explicit new models for `Account`, `EmailVerificationCode`, `OrganizationMembership`, and `DomainVerificationChallenge`
+- model org-specific admin and approval state on membership rather than on the user account
+- Abuse-control decision (`T0412`):
+- verification codes are single-use
+- a new send invalidates older pending codes for that account/email
+- code lifetime is 15 minutes
+- resend lockout is 5 minutes
+- daily cap is 5 sends in the trailing 24 hours
+- Domain/admin safety decision (`T0413`):
+- v1 claim flow can convert an existing `OPEN` org into an `OFFICIAL` org
+- v1 does not allow DNS takeover of an already `OFFICIAL` org
+- `OFFICIAL` orgs may never be left with zero approved admins
+- Private-chart authorization decision (`T0414`):
+- private org charts are visible only to approved members of that organization
+- provisional members, rejected members, outsiders, and unauthenticated visitors cannot view private charts
+- Free-flow non-regression decision (`T0415`):
+- unreserved emails remain addable without login in `OPEN` organizations
+- `OFFICIAL` controls must not spill into `OPEN` orgs
+- added a regression-testing task to enforce that no-login public self-entry still works for the free path
+- Updated files:
+- `.specify/memory/constitution.md`
+- `specs/004-private-accounts/spec.md`
+- `specs/004-private-accounts/plan.md`
+- `specs/004-private-accounts/tasks.md`
+- Spec Kit task note:
+- `T0410`, `T0411`, `T0412`, `T0413`, `T0414`, and `T0415` are now complete.
+- Recommendation for next work:
+- the next valid implementation slice is Phase 3 / User Story 1 (`T0420` through `T0425`)
+- implementation should start with the account and verification foundation only, not Phase 4+ behavior
+
+2026-04-09 Update - Spec 004 Phase 3 Implementation:
+- Implemented the account-and-verification foundation for `004-private-accounts` without changing the public person/org flow.
+- Added account domain objects under `src/main/java/com/fishdan/myorgchart/account/`:
+- `Account`
+- `EmailVerificationCode`
+- `EmailVerificationCodeStatus`
+- `AccountRepository`
+- `EmailVerificationCodeRepository`
+- `AccountService`
+- `AccountController`
+- `AccountSession`
+- `VerificationCodeGenerator`
+- `NumericVerificationCodeGenerator`
+- `VerificationEmailSender`
+- `AwsSesVerificationEmailSender`
+- Reused the existing `PasswordEncoder` bean for both account passwords and hashed verification-code storage so plaintext credentials/codes are not persisted.
+- Added a `Clock` bean and an AWS SES v2 client bean in `src/main/java/com/fishdan/myorgchart/MyOrgChartApplication.java`.
+- Added server-rendered account pages:
+- `src/main/resources/templates/register.html`
+- `src/main/resources/templates/login.html`
+- `src/main/resources/templates/verify-account.html`
+- Updated `src/main/java/com/fishdan/myorgchart/PageController.java` and `src/main/resources/templates/index.html` to expose the private-account entry points while keeping the free no-login instructions and main actions intact.
+- Added repo-safe SES configuration in `src/main/resources/application.properties`:
+- `APP_EMAIL_FROM_ADDRESS`
+- optional `APP_EMAIL_CONFIGURATION_SET`
+- SES integration detail:
+- verification emails are sent through AWS SES v2 using a verified sender identity and optional configuration set, matching the SES-oriented infrastructure pattern documented in `../fishdan-terraform/aws/ses.tf`
+- Verification-code behavior implemented:
+- single-use codes
+- 15-minute expiry
+- new send invalidates older pending codes
+- resend blocked for 5 minutes
+- capped at 5 sends per trailing 24 hours
+- Login/session behavior implemented:
+- browser flows use server-side session state via `HttpSession`
+- verified users redirect to home after login
+- unverified users redirect to the verify-account flow
+- Free-flow guardrail validation:
+- no changes were made to `PersonController`, `PersonService`, or the public create-person/create-organization/public-org-chart flow semantics for unreserved emails
+- Added automated coverage:
+- `src/test/java/com/fishdan/myorgchart/account/AccountServiceTest.java`
+- `src/test/java/com/fishdan/myorgchart/account/AccountControllerTest.java`
+- Validation commands:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Validation results:
+- backend test suite passed
+- Playwright suite passed with `8 passed`
+- the existing public no-login org-building flow still passes browser validation after the account feature additions
+- Spec Kit task note:
+- `T0420`, `T0421`, `T0422`, `T0423`, `T0424`, and `T0425` are complete.
+- Recommendation for next work:
+- move to Phase 4 / User Story 2 (`T0430` through `T0436`)
+- keep the implementation narrowly focused on reserved-email enforcement and self-service membership behavior without pulling domain-claim or admin workflows forward early
 
 2026-04-02 Update - Spec 2 Phase 3 and 4 Browser Coverage:
 - Added the initial Playwright browser suite at `tests/e2e/app.spec.js`.
@@ -360,3 +558,167 @@
 - Recommendation for next work:
 - do not start unrelated implementation on `main`
 - define the next tracked Speckit item first (for example a `003-...` spec) and only then branch for implementation
+
+2026-04-09 Update - Spec 004 Session Bootstrap And Design Progress:
+- Re-ran the `start.ai` session bootstrap on `2026-04-09` from branch `feature/004-private-accounts`.
+- Re-verified `.repo_ai` is a real git submodule and `specify` is available in the shell.
+- Refreshed GitHub App authentication with `.repo_ai/scripts/github-app-setup-git-auth.sh`.
+- Confirmed commit identity remains the bot account:
+- `git config user.name` -> `ai-codex-dan[bot]`
+- `git config user.email` -> `2461425+ai-codex-dan[bot]@users.noreply.github.com`
+- Monthly vulnerability audit status check:
+- latest recorded audit remained `2026-04-02`
+- because that is within 30 days of `2026-04-09`, the monthly audit was not due
+- Revisited spec `004` and strengthened the non-regression rule so the free public flow is preserved:
+- if an email is not reserved by a verified private account, and the organization is not owned/official, the no-login self-entry flow must remain available
+- Updated the constitutional/spec artifacts to make that invariant explicit:
+- `.specify/memory/constitution.md`
+- `specs/004-private-accounts/spec.md`
+- `specs/004-private-accounts/plan.md`
+- `specs/004-private-accounts/tasks.md`
+- Completed phase 2 design work for `004`:
+- selected server-side `HttpSession` authentication for v1 browser flows
+- preserved `Person`/`Organization` for the free flow while adding account-oriented persistence concepts
+- defined the `OPEN` versus `OFFICIAL` organization boundary
+- finalized verification throttle semantics: 15-minute single-use codes, 5-minute resend lockout, 5 sends per trailing 24 hours
+- documented claim/admin safety rules and private-chart authorization
+- Speckit completion note:
+- `T0410` through `T0415` are complete
+
+2026-04-09 Update - Spec 004 Phase 3 Accounts And Verification:
+- Implemented the first private-account slice under `src/main/java/com/fishdan/myorgchart/account`.
+- Added account registration, login, verification-code send/confirm, verified-account state, and session-backed browser auth.
+- Added SES v2 email delivery integration through `AwsSesVerificationEmailSender` with env-backed sender configuration.
+- Added server-rendered account pages:
+- `register.html`
+- `login.html`
+- `verify-account.html`
+- Validation:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `8 passed`
+- Non-regression note:
+- the public no-login org/person/browser flows still passed after the account slice was added
+- Speckit completion note:
+- `T0420` through `T0425` are complete
+
+2026-04-09 Update - Spec 004 Phase 4 Private Account Ownership And Self-Service:
+- Implemented private-account ownership enforcement so a verified account email cannot be added publicly by someone else.
+- Added the blocked-add message instructing the user to email the account owner and ask them to add themselves.
+- Added `/settings` with:
+- password-change form
+- organization membership listing
+- self-add flow for verified users
+- self-service update flow for department and supervisor email
+- Added dev-only verification inbox support and cleanup endpoints so browser tests can verify account codes without external email delivery.
+- Added backend and Playwright coverage for:
+- reserved verified-email blocking
+- verified-user self-add and update flows
+- preserved free-flow regression coverage for unreserved emails in open organizations
+- Validation:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `10 passed`
+- Test-harness note:
+- Playwright helpers were updated to tolerate servlet URL rewriting that appends `;jsessionid=...` on successful redirects, and the settings-page assertion was tightened to target the persisted membership form rather than the blank add-membership form
+- Speckit completion note:
+- `T0430` through `T0436` are complete
+
+2026-04-09 Update - Spec 004 Phase 5 Official Domains And Claims:
+- Added organization ownership state so organizations are now explicitly `OPEN` or `OFFICIAL`.
+- Added domain-verification challenge persistence with generated TXT challenge tokens in the form `fdorgchart-verification=...`.
+- Added a DNS TXT lookup abstraction with:
+- JNDI-based TXT lookup for non-dev runtimes
+- dev-only in-memory TXT storage and endpoints so the flow can be validated locally without touching real DNS
+- Added a settings-page flow to:
+- start a domain verification challenge
+- display the TXT value to publish
+- re-check the TXT record
+- show the organizations the current account now administers
+- Implemented verification rules:
+- only verified accounts can manage official-domain claims
+- verification checks are capped at once every 10 minutes per challenge
+- existing `OPEN` organizations can be claimed
+- already-`OFFICIAL` organizations reject re-claim attempts in v1
+- On successful verification:
+- the organization is marked `OFFICIAL`
+- a new organization is created automatically when the verified domain does not yet exist
+- the verifying account becomes the first recorded admin for that organization
+- Added test-cleanup support for domain challenges, admin rows, and dev TXT records so browser runs remain isolated.
+- Validation:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `11 passed`
+- Scope note:
+- this phase establishes official-domain ownership and first-admin assignment only
+- provisional-member approvals and admin delegation remain intentionally deferred to phase 6
+- Speckit completion note:
+- `T0440` through `T0445` are complete
+
+2026-04-09 Update - Spec 004 Phase 6 Admin Controls And Provisional Members:
+- Added explicit membership approval state on `Person` rows:
+- `APPROVED`
+- `PROVISIONAL`
+- `REJECTED`
+- Preserved the free-flow behavior for `OPEN` organizations:
+- public and authenticated self-entry remain immediately approved there
+- official-domain controls do not spill back into open organizations
+- Added official-domain membership behavior:
+- public create-person submissions to `OFFICIAL` organizations are rejected
+- verified self-adds to `OFFICIAL` organizations become provisional unless the joining account is already an org admin
+- provisional members are excluded from the org-chart API for official organizations
+- Added admin review and role-management support in the settings page:
+- approve provisional member
+- reject provisional member
+- grant admin to an approved member with a verified private account
+- revoke admin from an approved member
+- Added last-admin safety enforcement:
+- official organizations cannot be left with zero admins
+- admin revocation now rejects the final remaining admin
+- Added test coverage for:
+- public add rejection against official organizations
+- org-chart filtering of provisional members
+- admin permission checks and last-admin safety
+- browser flow covering official-org self-join, provisional hidden state, approval, and admin promotion
+- Validation:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `12 passed`
+- Scope note:
+- this phase delivers membership approval and admin-role control for official organizations only
+- org-chart privacy remains deferred to phase 7
+- Speckit completion note:
+- `T0450` through `T0456` are complete
+
+2026-04-09 Update - Spec 004 Phase 7 Org Chart Privacy:
+- Added org-level chart visibility state on `Organization`:
+- `PUBLIC`
+- `PRIVATE`
+- Added admin-facing settings controls so official-org admins can toggle chart visibility without touching the free/open organization flow.
+- Updated private-chart authorization:
+- unauthorized viewers now receive the private-chart message instead of org structure
+- authorized viewers are:
+- org admins for that organization
+- approved members whose signed-in account email matches an approved person row in that organization
+- Updated the public org-chart page behavior:
+- the same lookup flow now shows the private-chart message when access is denied
+- the org tree remains visible when the chart is public or the signed-in viewer is authorized
+- Preserved open/public behavior:
+- `OPEN` organizations still default to public charts
+- privacy controls were added for admin-managed official organizations and did not change the simple free lookup flow for open orgs
+- Validation:
+- `bash ./mvnw -q test`
+- `SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e`
+- Result:
+- backend tests passed
+- Playwright passed with `13 passed`
+- Speckit completion note:
+- `T0460` through `T0464` are complete

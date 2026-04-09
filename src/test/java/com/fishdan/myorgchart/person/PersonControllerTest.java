@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,13 +38,13 @@ class PersonControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/create-person?success=true"));
 
-        verify(personService).createPerson(any(Person.class));
+        verify(personService).createPerson(any(Person.class), isNull());
     }
 
     @Test
     void createPersonRendersFormWithErrorWhenServiceRejectsInput() throws Exception {
         doThrow(new IllegalArgumentException("No organization exists with the domain: fishdan.com"))
-            .when(personService).createPerson(any(Person.class));
+            .when(personService).createPerson(any(Person.class), isNull());
 
         mockMvc.perform(post("/api/people")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -54,5 +55,23 @@ class PersonControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("person"))
             .andExpect(model().attribute("error", "No organization exists with the domain: fishdan.com"));
+    }
+
+    @Test
+    void createPersonShowsPrivateAccountMessageWhenEmailIsReserved() throws Exception {
+        doThrow(new IllegalArgumentException(
+            "reserved@example.com has a private account. Please send an email to reserved@example.com asking them to add themselves to Fishdan"
+        )).when(personService).createPerson(any(Person.class), isNull());
+
+        mockMvc.perform(post("/api/people")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("fullName", "Reserved User")
+                .param("email", "reserved@example.com")
+                .param("domain", "fishdan.com")
+                .param("department", "Engineering"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("person"))
+            .andExpect(model().attribute("error",
+                "reserved@example.com has a private account. Please send an email to reserved@example.com asking them to add themselves to Fishdan"));
     }
 }

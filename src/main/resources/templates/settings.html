@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Account Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Account Settings</h1>
+
+  <div class="alert alert-info" role="alert">
+    <strong>Signed in as:</strong>
+    <span th:text="${accountEmail}"></span>
+    <div th:if="${verifiedAccount}">This account is verified and can manage its own org-chart entries.</div>
+    <div th:unless="${verifiedAccount}">Verify this account before adding or editing self-managed organization entries.</div>
+  </div>
+
+  <div th:if="${passwordChanged}" class="alert alert-success" role="alert">Password updated successfully.</div>
+  <div th:if="${membershipAdded}" class="alert alert-success" role="alert">Organization membership added successfully.</div>
+  <div th:if="${membershipUpdated}" class="alert alert-success" role="alert">Organization membership updated successfully.</div>
+  <div th:if="${challengeCreated}" class="alert alert-success" role="alert">Domain verification challenge created successfully.</div>
+  <div th:if="${domainVerified}" class="alert alert-success" role="alert">Domain verified successfully. You are now the first admin for that organization.</div>
+  <div th:if="${membershipApproved}" class="alert alert-success" role="alert">Organization membership approved successfully.</div>
+  <div th:if="${membershipRejected}" class="alert alert-success" role="alert">Organization membership rejected successfully.</div>
+  <div th:if="${adminGranted}" class="alert alert-success" role="alert">Admin access granted successfully.</div>
+  <div th:if="${adminRevoked}" class="alert alert-success" role="alert">Admin access revoked successfully.</div>
+  <div th:if="${chartVisibilityUpdated}" class="alert alert-success" role="alert">Org chart visibility updated successfully.</div>
+  <div th:if="${passwordError}" class="alert alert-danger" role="alert" th:text="${passwordError}"></div>
+  <div th:if="${membershipError}" class="alert alert-danger" role="alert" th:text="${membershipError}"></div>
+  <div th:if="${domainError}" class="alert alert-danger" role="alert" th:text="${domainError}"></div>
+  <div th:if="${adminError}" class="alert alert-danger" role="alert" th:text="${adminError}"></div>
+
+  <div class="card shadow-lg p-4 mb-4">
+    <h2 class="h4 mb-3">Change Password</h2>
+    <form action="/account/password" method="post">
+      <div class="mb-3">
+        <label for="currentPassword" class="form-label">Current Password</label>
+        <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="newPassword" class="form-label">New Password</label>
+        <input type="password" id="newPassword" name="newPassword" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Update Password</button>
+    </form>
+  </div>
+
+  <div class="card shadow-lg p-4 mb-4">
+    <h2 class="h4 mb-3">Add Yourself To An Organization</h2>
+    <form action="/account/memberships" method="post">
+      <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input type="text" id="fullName" name="fullName" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="domain" class="form-label">Organization Domain</label>
+        <input type="text" id="domain" name="domain" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="department" class="form-label">Department</label>
+        <input type="text" id="department" name="department" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="supervisorEmail" class="form-label">Supervisor Email</label>
+        <input type="email" id="supervisorEmail" name="supervisorEmail" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">Add Myself</button>
+    </form>
+  </div>
+
+  <div class="card shadow-lg p-4">
+    <h2 class="h4 mb-3">Your Organization Entries</h2>
+    <div th:if="${#lists.isEmpty(memberships)}" class="text-muted">
+      No organization entries yet.
+    </div>
+    <div th:each="membership : ${memberships}" class="border rounded p-3 mb-3">
+      <div class="fw-bold" th:text="${membership.fullName}"></div>
+      <div class="mb-2">
+        <span th:text="${membership.domain}"></span>
+        <span class="text-muted"> | </span>
+        <span th:text="${membership.email}"></span>
+      </div>
+      <div class="mb-2 small text-muted">
+        Approval status:
+        <span th:text="${membership.approvalStatus}"></span>
+      </div>
+      <form action="/account/memberships/update" method="post">
+        <input type="hidden" name="personId" th:value="${membership.id}">
+        <div class="mb-3">
+          <label class="form-label">Department</label>
+          <input type="text" name="department" class="form-control" th:value="${membership.department}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Supervisor Email</label>
+          <input type="email" name="supervisorEmail" class="form-control" th:value="${membership.supervisorEmail}">
+        </div>
+        <button type="submit" class="btn btn-outline-primary">Update Entry</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-lg p-4 mt-4">
+    <h2 class="h4 mb-3">Official Domains And Claims</h2>
+    <p class="text-muted">
+      Start a DNS TXT verification flow to make a domain official or claim an existing open organization.
+    </p>
+    <form action="/account/domains/challenges" method="post" class="mb-4">
+      <div class="mb-3">
+        <label for="verificationDomain" class="form-label">Domain</label>
+        <input type="text" id="verificationDomain" name="domain" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Start Domain Verification</button>
+    </form>
+
+    <div th:if="${#lists.isEmpty(domainChallenges)}" class="text-muted">
+      No domain verification challenges yet.
+    </div>
+    <div th:each="challenge : ${domainChallenges}" class="border rounded p-3 mb-3">
+      <div class="fw-bold" th:text="${challenge.domain}"></div>
+      <div class="small text-muted mb-2">
+        Publish this TXT value:
+        <code th:text="${challenge.challengeToken}"></code>
+      </div>
+      <div class="mb-2">
+        Status:
+        <span th:text="${challenge.status}"></span>
+      </div>
+      <div th:if="${challenge.lastCheckedAt}" class="small text-muted mb-2">
+        Last checked:
+        <span th:text="${challenge.lastCheckedAt}"></span>
+      </div>
+      <form action="/account/domains/challenges/verify" method="post">
+        <input type="hidden" name="challengeId" th:value="${challenge.id}">
+        <button
+          type="submit"
+          class="btn btn-outline-primary"
+          th:disabled="${challenge.status.name() == 'VERIFIED' or challenge.status.name() == 'SUPERSEDED'}">
+          Check DNS TXT Record
+        </button>
+      </form>
+    </div>
+
+    <h3 class="h5 mt-4">Organizations You Administer</h3>
+    <div th:if="${#lists.isEmpty(adminOrganizations)}" class="text-muted">
+      You are not an admin of any official organizations yet.
+    </div>
+    <div th:each="admin : ${adminOrganizations}" class="border rounded p-3 mb-2">
+      <div class="fw-bold" th:text="${admin.organization.name}"></div>
+      <div class="text-muted" th:text="${admin.organization.domain}"></div>
+      <div class="small text-muted">
+        Ownership:
+        <span th:text="${admin.organization.ownershipType}"></span>
+      </div>
+      <div class="small text-muted mb-2">
+        Chart visibility:
+        <span th:text="${admin.organization.chartVisibility}"></span>
+      </div>
+      <form action="/account/admin/chart-visibility" method="post" class="mt-2">
+        <input type="hidden" name="organizationId" th:value="${admin.organization.id}">
+        <div class="d-flex gap-2">
+          <button type="submit" name="visibility" value="PUBLIC" class="btn btn-outline-secondary btn-sm">Make Public</button>
+          <button type="submit" name="visibility" value="PRIVATE" class="btn btn-outline-dark btn-sm">Make Private</button>
+        </div>
+      </form>
+    </div>
+
+    <h3 class="h5 mt-4">Pending Member Reviews</h3>
+    <div th:if="${#lists.isEmpty(managedOrganizations)}" class="text-muted">
+      No managed official organizations yet.
+    </div>
+    <div th:each="managed : ${managedOrganizations}" class="border rounded p-3 mb-3">
+      <div class="fw-bold" th:text="${managed.organization.name}"></div>
+      <div class="text-muted mb-3" th:text="${managed.organization.domain}"></div>
+
+      <div th:if="${#lists.isEmpty(managed.pendingMembers)}" class="text-muted mb-3">
+        No pending members for this organization.
+      </div>
+      <div th:each="member : ${managed.pendingMembers}" class="border rounded p-3 mb-3">
+        <div class="fw-bold" th:text="${member.fullName}"></div>
+        <div class="small text-muted mb-2">
+          <span th:text="${member.email}"></span>
+          <span class="text-muted"> | </span>
+          <span th:text="${member.department}"></span>
+        </div>
+        <div class="d-flex gap-2">
+          <form action="/account/admin/memberships/approve" method="post">
+            <input type="hidden" name="personId" th:value="${member.id}">
+            <button type="submit" class="btn btn-outline-success btn-sm">Approve</button>
+          </form>
+          <form action="/account/admin/memberships/reject" method="post">
+            <input type="hidden" name="personId" th:value="${member.id}">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+          </form>
+        </div>
+      </div>
+
+      <h4 class="h6 mt-3">Approved Members</h4>
+      <div th:if="${#lists.isEmpty(managed.approvedMembers)}" class="text-muted">
+        No approved members yet.
+      </div>
+      <div th:each="member : ${managed.approvedMembers}" class="border rounded p-3 mb-2">
+        <div class="fw-bold" th:text="${member.fullName}"></div>
+        <div class="small text-muted mb-2">
+          <span th:text="${member.email}"></span>
+          <span class="text-muted"> | </span>
+          <span th:text="${member.department}"></span>
+        </div>
+        <div class="small mb-2">
+          Role:
+          <span th:text="${managed.adminEmail(member.email) ? 'ADMIN' : 'MEMBER'}"></span>
+        </div>
+        <div class="d-flex gap-2">
+          <form action="/account/admin/admins/grant" method="post" th:if="${!managed.adminEmail(member.email)}">
+            <input type="hidden" name="personId" th:value="${member.id}">
+            <button type="submit" class="btn btn-outline-primary btn-sm">Grant Admin</button>
+          </form>
+          <form action="/account/admin/admins/revoke" method="post" th:if="${managed.adminEmail(member.email)}">
+            <input type="hidden" name="personId" th:value="${member.id}">
+            <button type="submit" class="btn btn-outline-warning btn-sm">Revoke Admin</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+  </div>
+</div>
+</body>
+</html>

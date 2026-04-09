@@ -1,38 +1,39 @@
 # fdorgchart
 
-`fdorgchart` is a small Spring Boot web app for building and viewing a simple organization chart.
+`fdorgchart` is a Spring Boot web app for building and viewing organization charts.
 
-It lets you:
+It now supports two product modes:
+
+- a simple free mode where people can still add themselves to open organizations without logging in
+- an account-managed mode with verified private identities, official-domain administration, approvals, and private org charts
+
+## Product modes
+
+### Free open-org mode
+
+This mode remains a first-class path.
 
 - create an organization identified by a domain such as `example.com`
-- add people to that organization
-- assign each person an optional supervisor email
-- render the reporting structure as a tree in the browser
+- tell coworkers to visit the site and add themselves
+- no login is required
+- unreserved email addresses can still be added to `OPEN` organizations
 
-The project uses:
-
-- Java 17
-- Spring Boot
-- Thymeleaf server-rendered templates
-- Spring Data JPA
-- MariaDB
-- Playwright for browser-level end-to-end tests
-
-## What the app does
-
-The app has three main flows:
+This is the workflow that must stay simple:
 
 1. Create an organization
 2. Add people to that organization
-3. View the org chart for that organization domain
+3. View the org chart
 
-The org chart is built from `supervisorEmail` relationships:
+### Private-account and official-org mode
 
-- people without a supervisor are treated as top-level nodes
-- people with a `supervisorEmail` are shown under that supervisor
-- the chart is filtered by organization domain
+This mode adds ownership and admin controls:
 
-This is intentionally a lightweight org-chart manager, not a full identity or HR system.
+- private accounts with email + password
+- SES-backed email verification codes
+- verified-email ownership protection
+- official-domain claims through DNS TXT verification
+- admin approval for official-domain self-joins
+- org chart public/private visibility controls
 
 ## Main routes
 
@@ -40,8 +41,12 @@ Browser pages:
 
 - `/` - home page
 - `/create-organization` - create an organization
-- `/create-person` - add a person
+- `/create-person` - add a person through the public flow
 - `/orgchart` - enter a domain and render the org chart
+- `/register` - create a private account
+- `/login` - sign in
+- `/verify-account` - confirm the email verification code
+- `/settings` - self-service account, membership, domain, admin, and privacy controls
 
 Application endpoints:
 
@@ -49,6 +54,26 @@ Application endpoints:
 - `GET /api/organizations` - list organizations
 - `POST /api/people` - create a person
 - `GET /api/orgchart?domain=example.com` - return org chart JSON for one domain
+
+Development-only test helpers under the `dev` profile:
+
+- `GET /api/dev/test-data/verification-code?email=...`
+- `POST /api/dev/test-data/dns-txt?domain=...&value=...`
+- `DELETE /api/dev/test-data/dns-txt?domain=...`
+- `DELETE /api/dev/test-data/account?email=...`
+- `DELETE /api/dev/test-data/organization?domain=...`
+
+## Core rules
+
+- `OPEN` organizations preserve the simple public no-login self-entry flow.
+- If an email is not reserved by a verified private account, it can still be added to an open organization publicly.
+- A verified private-account email can only be added or managed by that account owner.
+- `OFFICIAL` organizations are admin-managed domains created or claimed through DNS TXT verification.
+- Self-joins to official organizations are provisional until approved by an admin.
+- Provisional members do not appear on the org chart.
+- Official organizations cannot be left with zero admins.
+- Official org charts can be public or private.
+- Private org charts are visible only to org admins and approved members of that organization.
 
 ## Data model
 
@@ -60,11 +85,8 @@ An organization has:
 - `domain`
 - `email`
 - `password`
-
-Notes:
-
-- organization domains must be unique
-- organization passwords are hashed before being stored
+- `ownershipType` as `OPEN` or `OFFICIAL`
+- `chartVisibility` as `PUBLIC` or `PRIVATE`
 
 ### Person
 
@@ -76,12 +98,16 @@ A person has:
 - `department`
 - `supervisorEmail` (optional)
 - `organization`
+- `approvalStatus` as `APPROVED`, `PROVISIONAL`, or `REJECTED`
 
-Notes:
+### Account and domain-control entities
 
-- a person can only be created if the organization domain already exists
-- person records are unique by `email + domain`
-- person domains are normalized to lowercase before saving
+The private-account and official-domain features add:
+
+- `Account`
+- `EmailVerificationCode`
+- `DomainVerificationChallenge`
+- `OrganizationAdmin`
 
 ## Running locally
 
@@ -111,7 +137,7 @@ export SPRING_DATASOURCE_PASSWORD=your_db_password
 
 ### 3. Start the app for local development
 
-For local development, activate the `dev` Spring profile. That profile intentionally points the app at a local MariaDB instance and keeps this localhost behavior out of the default production-safe configuration.
+For local development, activate the `dev` Spring profile.
 
 ```bash
 export SPRING_PROFILES_ACTIVE=dev
@@ -126,179 +152,93 @@ When the `dev` profile is active and `SPRING_DATASOURCE_URL` is not set, the app
 jdbc:mariadb://localhost:3306/myorgchart
 ```
 
-You can still override the local dev URL explicitly by setting `SPRING_DATASOURCE_URL`.
+### 4. Email verification configuration
 
-If you prefer not to use the helper script, this is the equivalent direct command:
+Non-dev runtimes require SES sender configuration:
+
+```bash
+export APP_EMAIL_FROM_ADDRESS=verified-sender@example.com
+export APP_EMAIL_CONFIGURATION_SET=optional-configuration-set
+```
+
+`APP_EMAIL_CONFIGURATION_SET` is optional.
+
+### 5. DNS verification behavior
+
+Production-style DNS verification uses public TXT lookup.
+
+Under the `dev` profile, browser tests and local development can simulate TXT records through the dev-only endpoints instead of editing real DNS.
+
+### 6. Start the app directly
 
 ```bash
 export SPRING_PROFILES_ACTIVE=dev
 bash ./mvnw spring-boot:run
 ```
 
-### 4. Start the app for production or other deployed environments
-
-Production and deployed environments should not activate the `dev` profile. They should continue providing all datasource settings explicitly:
-
-```bash
-export SPRING_DATASOURCE_URL=jdbc:mariadb://your-db-host:3306/myorgchart
-export SPRING_DATASOURCE_USERNAME=your_db_user
-export SPRING_DATASOURCE_PASSWORD=your_db_password
-./mvnw spring-boot:run
-```
-
-### 5. Build and run the jar
-
-With the Maven wrapper:
-
-```bash
-./mvnw spring-boot:run
-```
-
-Or build a jar and run it:
-
-```bash
-./mvnw clean package
-java -jar MyOrgChart-0.0.1-SNAPSHOT.jar
-```
-
 The app listens on port `8080` by default.
-
-Open:
-
-```text
-http://localhost:8080
-```
 
 ## How to use it
 
-1. Open `/create-organization` and create an organization using the domain you want to manage.
-2. Open `/create-person` and add people using that exact same domain.
+### Free open-org flow
+
+1. Open `/create-organization` and create an organization.
+2. Open `/create-person` and add people using the same domain.
 3. Leave `Supervisor Email` blank for top-level leaders.
-4. Set `Supervisor Email` for everyone else to build the reporting tree.
-5. Open `/orgchart`, enter the domain, and view the chart.
+4. Open `/orgchart`, enter the domain, and view the chart.
 
-Example flow:
+### Private-account flow
 
-- Create organization with domain `example.com`
-- Add `ceo@example.com` with no supervisor
-- Add `manager@example.com` with supervisor `ceo@example.com`
-- Add `dev@example.com` with supervisor `manager@example.com`
+1. Open `/register` and create a private account.
+2. Verify the email with the code sent through SES.
+3. Open `/settings` to:
+   - add yourself to organizations
+   - update your own department and supervisor
+   - start official-domain verification
 
-The chart will render as CEO -> Manager -> Dev.
+### Official-domain admin flow
 
-## Hosting your own version
+1. Start a domain verification challenge from `/settings`.
+2. Publish the required TXT record.
+3. Re-check verification from `/settings`.
+4. After success, the organization becomes `OFFICIAL` and you become the first admin.
+5. Approve or reject provisional members from `/settings`.
+6. Grant or revoke admin status for approved verified members.
+7. Toggle chart visibility between public and private.
 
-You can host this app anywhere that supports a Java process plus a MariaDB database.
+## Validation
 
-Minimum requirements:
+Backend validation:
 
-- Java 17 runtime
-- a MariaDB instance
-- environment variables for the datasource
-- a way to run `java -jar MyOrgChart-0.0.1-SNAPSHOT.jar`
+```bash
+bash ./mvnw -q test
+```
 
-### Basic deployment process
+Browser validation:
 
-1. Provision a MariaDB database.
-2. Create the three datasource environment variables:
-   - `SPRING_DATASOURCE_URL`
-   - `SPRING_DATASOURCE_USERNAME`
-   - `SPRING_DATASOURCE_PASSWORD`
-3. Do not activate the `dev` profile in deployed environments; it exists only to make local development point at `localhost`.
-4. Build the application:
+```bash
+SPRING_DATASOURCE_USERNAME=root SPRING_DATASOURCE_PASSWORD=mysql npm run test:e2e
+```
+
+As of the completed `004-private-accounts` implementation, the Playwright suite passes with `13 passed`.
+
+## Hosting notes
+
+You can host this app anywhere that supports:
+
+- Java 17
+- MariaDB
+- environment-variable configuration
+
+For deployed environments:
+
+- do not activate the `dev` profile
+- provide datasource environment variables explicitly
+- provide SES sender configuration if email verification is enabled
+
+Build and run:
 
 ```bash
 ./mvnw clean package
-```
-
-5. Deploy the generated jar:
-
-```bash
 java -jar MyOrgChart-0.0.1-SNAPSHOT.jar
 ```
-
-### Platforms this should fit easily
-
-- a small VM running systemd
-- Docker or another container platform
-- Heroku-style platforms that run a `Procfile`
-- Render, Railway, Fly.io, or similar services that support Java apps and external databases
-
-This repository already includes a `Procfile`:
-
-```text
-web: java -jar MyOrgChart-0.0.1-SNAPSHOT.jar
-```
-
-That makes Procfile-based hosting straightforward after the jar is built.
-
-### Self-hosting on a Linux VM
-
-Typical pattern:
-
-1. Install Java 17.
-2. Install or connect to MariaDB.
-3. Clone the repo.
-4. Export the datasource env vars.
-5. Ensure `SPRING_PROFILES_ACTIVE` is unset or set to a non-`dev` profile for the deployed service.
-6. Run `./mvnw clean package`.
-7. Start `java -jar MyOrgChart-0.0.1-SNAPSHOT.jar`.
-8. Put Nginx or Caddy in front of it if you want TLS and a public domain.
-
-### Running behind a reverse proxy
-
-If you expose the app publicly, put it behind a reverse proxy such as Nginx or Caddy and forward traffic to port `8080`.
-
-That gives you:
-
-- HTTPS termination
-- domain routing
-- easier restarts and process supervision
-
-## Database behavior
-
-JPA is configured with:
-
-```properties
-spring.jpa.hibernate.ddl-auto=update
-```
-
-That means the app will try to update the schema automatically at startup.
-
-This is convenient for development and simple deployments, but for stricter production environments you may eventually want explicit migrations.
-
-## Testing
-
-Run backend tests:
-
-```bash
-./mvnw test
-```
-
-Run browser tests:
-
-```bash
-npm install
-npm run test:e2e:install
-npm run test:e2e
-```
-
-The Playwright setup starts the Spring Boot app on port `18080` through `scripts/run-e2e-server.sh`.
-
-## Current limitations
-
-- no authentication flow for logging into an organization
-- no edit or delete UI for organizations or people
-- org chart relationships are based only on supervisor email strings
-- no import/export workflow
-- no production migration tooling yet
-
-## Project structure
-
-Key files:
-
-- `src/main/java/com/fishdan/myorgchart` - Spring Boot application and controllers
-- `src/main/resources/templates` - Thymeleaf templates
-- `src/main/resources/application.properties` - runtime configuration
-- `src/test/java` - backend tests
-- `tests/e2e` - Playwright tests
